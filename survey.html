@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ερωτηματολόγιο μελέτης · FinBot</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-page: #e8f0fe;
+    --bg-page-2: #f3e8fd;
+    --card: #ffffff;
+    --border: #dadce0;
+    --border-focus: #1a73e8;
+    --text: #202124;
+    --muted: #5f6368;
+    --primary: #1a73e8;
+    --primary-hover: #1557b0;
+    --primary-soft: rgba(26, 115, 232, 0.08);
+    --chip-hover: #f1f3f4;
+    --shadow-card: 0 1px 2px rgba(60, 64, 67, 0.15), 0 2px 8px rgba(60, 64, 67, 0.08);
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    background: linear-gradient(165deg, var(--bg-page) 0%, #fafbff 45%, var(--bg-page-2) 100%);
+    color: var(--text);
+    font-family: 'Roboto', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 24px 16px 40px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .form-shell {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+
+  .form-shell-header {
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    padding: 18px 22px;
+    color: #fff;
+  }
+
+  .form-shell-header .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.92;
+    margin-bottom: 6px;
+  }
+
+  .form-shell-header h1 {
+    font-size: clamp(1.35rem, 4vw, 1.6rem);
+    font-weight: 400;
+    line-height: 1.25;
+    margin: 0;
+  }
+
+  .form-shell-header .subtitle {
+    font-size: 14px;
+    line-height: 1.45;
+    opacity: 0.95;
+    margin-top: 10px;
+    max-width: 100%;
+  }
+
+  .progress-block {
+    padding: 16px 22px 12px;
+    border-bottom: 1px solid var(--border);
+    background: #fafafa;
+  }
+
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .progress-bar {
+    height: 6px;
+    background: #e8eaed;
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #1a73e8, #673ab7);
+    border-radius: 99px;
+    width: 0%;
+    transition: width 0.45s ease;
+  }
+
+  .card {
+    padding: 22px 22px 24px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 200px;
+    animation: cardIn 0.3s ease;
+  }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .q-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--primary);
+    margin-bottom: 10px;
+    letter-spacing: 0.02em;
+  }
+
+  .q-text {
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 8px;
+    white-space: pre-wrap;
+    line-height: 1.45;
+  }
+
+  .q-scale-hint {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 18px;
+    white-space: pre-wrap;
+    line-height: 1.45;
+  }
+
+  .likert-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .likert-row button {
+    min-width: 44px;
+    height: 44px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .likert-row button:hover {
+    border-color: var(--border-focus);
+    background: var(--primary-soft);
+    box-shadow: 0 1px 2px rgba(26, 115, 232, 0.2);
+  }
+
+  .likert-row button:active {
+    background: #e8f0fe;
+  }
+
+  .likert-row button.selected {
+    border-color: var(--border-focus);
+    background: #e8f0fe;
+    color: var(--primary);
+    box-shadow: 0 0 0 1px rgba(26, 115, 232, 0.35);
+  }
+
+  .choice-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .choice-stack button {
+    text-align: left;
+    padding: 12px 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.4;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+
+  .choice-stack button:hover {
+    border-color: var(--border-focus);
+    background: var(--chip-hover);
+  }
+
+  .choice-stack button.selected {
+    border-color: var(--border-focus);
+    background: var(--primary-soft);
+    box-shadow: 0 0 0 1px rgba(26, 115, 232, 0.25);
+  }
+
+  .nav-row {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  .btn-back {
+    padding: 10px 16px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--primary);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s ease, opacity 0.15s ease;
+  }
+
+  .btn-back:hover:not(:disabled) {
+    background: var(--chip-hover);
+  }
+
+  .btn-back:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    color: var(--muted);
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: #fafafa;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+    resize: vertical;
+    margin-bottom: 14px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  textarea:focus {
+    outline: none;
+    border-color: var(--border-focus);
+    background: var(--card);
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.25);
+  }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
+    padding-top: 12px;
+  }
+
+  .btn-primary {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: var(--radius);
+    background: var(--primary);
+    color: #fff;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 1px 2px rgba(60, 64, 67, 0.25);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: var(--primary-hover);
+    box-shadow: 0 1px 3px rgba(60, 64, 67, 0.35);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .btn-ghost {
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .btn-ghost:hover {
+    color: var(--text);
+    background: var(--chip-hover);
+  }
+
+  .missing-session {
+    text-align: center;
+    padding: 48px 20px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+  }
+
+  .missing-session h1 {
+    font-size: 1.35rem;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+
+  .missing-session .subtitle {
+    font-size: 15px;
+    color: var(--muted);
+    margin-bottom: 20px;
+    max-width: 36ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .missing-session a {
+    color: var(--primary);
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .missing-session a:hover {
+    text-decoration: underline;
+  }
+
+  .done-icon {
+    font-size: 44px;
+    margin-bottom: 12px;
+    line-height: 1;
+  }
+
+  .footer-note {
+    display: block;
+    margin-top: 0;
+    padding: 0 4px;
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  .footer-note strong {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  @media (max-width: 480px) {
+    .likert-row {
+      justify-content: center;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap" id="app">
+  <div class="missing-session" id="missingSession" hidden>
+    <h1>Δεν βρέθηκε ενεργή συνεδρία</h1>
+    <p class="subtitle" style="margin: 16px auto 24px;">Ολοκλήρωσε πρώτα τη συνομιλία με τον FinBot και μετά πάτα «Πάμε στις ερωτήσεις».</p>
+    <p><a href="Finbot.html">← Επιστροφή στο FinBot</a></p>
+  </div>
+
+  <div id="surveyRoot" hidden>
+    <div class="form-shell">
+      <div class="form-shell-header">
+        <div class="badge">Μέρος 2 · Ερωτηματολόγιο έρευνας</div>
+        <h1>Ερωτηματολόγιο εμπειρίας</h1>
+        <p class="subtitle">Ξεχωριστή φόρμα — όχι συνομιλία με τον FinBot. Σύντομες ερωτήσεις, χωρίς σωστές ή λάθος απαντήσεις. Τα στοιχεία παραμένουν ανώνυμα.</p>
+      </div>
+      <div class="progress-block">
+        <div class="progress-meta">
+          <span id="progressLabel">Ερώτηση 1 / 11</span>
+          <span id="progressPct">0%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+      <div class="card" id="questionCard"></div>
+    </div>
+    <p class="footer-note">
+      Τα δεδομένα είναι <strong>ανώνυμα</strong> (χωρίς όνομα ή email). Η πρόοδος εμφανίζεται πάνω — όπως σε φόρμες όπως το Google Forms.
+    </p>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'finbot_survey_context_v1';
+const RESPONSE_LOG_KEY = 'finbot_user_responses_v1';
+const MAX_LOG_ENTRIES = 2500;
+
+const FINBOT_API_BASE = '';
+const FINBOT_API_SECRET = '';
+
+const state = {
+  condition: 0,
+  error_timing: null,
+  show_conf: false,
+};
+
+let responseSessionId = null;
+
+/** Σειρά βημάτων · το q8 παραλείπεται αν στην q7 δεν επιλεχθεί «Ναι» */
+const STEP_IDS = ['intro', 'q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10', 'scenario'];
+
+const answers = {};
+
+let currentStepId = 'intro';
+
+function shouldSkip(stepId, ans) {
+  if (stepId === 'q8') return ans.q7 !== 'yes';
+  return false;
+}
+
+function navSteps(ans) {
+  return STEP_IDS.filter(id => !shouldSkip(id, ans));
+}
+
+function nextStepId(cur, ans) {
+  const steps = navSteps(ans);
+  const i = steps.indexOf(cur);
+  if (i < 0 || i >= steps.length - 1) return null;
+  return steps[i + 1];
+}
+
+function prevStepId(cur, ans) {
+  const steps = navSteps(ans);
+  const i = steps.indexOf(cur);
+  if (i <= 0) return null;
+  return steps[i - 1];
+}
+
+function pushEntryToServer(entry) {
+  const base = (FINBOT_API_BASE || '').trim().replace(/\/$/, '');
+  if (!base) return;
+  const headers = { 'Content-Type': 'application/json' };
+  if ((FINBOT_API_SECRET || '').trim()) {
+    headers['X-FinBot-Secret'] = FINBOT_API_SECRET.trim();
+  }
+  fetch(base + '/api/entries', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(entry),
+    keepalive: true,
+  }).catch(() => {});
+}
+
+function loadResponseLog() {
+  try {
+    const raw = localStorage.getItem(RESPONSE_LOG_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function saveResponseLog(entries) {
+  try {
+    localStorage.setItem(RESPONSE_LOG_KEY, JSON.stringify(entries));
+  } catch (e) {
+    console.warn('FinBot survey: αποθήκευση απέτυχε', e);
+  }
+}
+
+/** Αφαιρεί παλιές καταχωρήσεις post_survey για το ίδιο πεδίο και προσθέτει τη νέα (όταν ο χρήστης αλλάζει απάντηση). */
+function replacePostSurveyEntry(field, value, detail) {
+  if (!responseSessionId) return;
+  const log = loadResponseLog();
+  const filtered = log.filter(
+    e =>
+      !(
+        e.sessionId === responseSessionId &&
+        e.category === 'post_survey' &&
+        e.field === field
+      )
+  );
+  saveResponseLog(filtered);
+  const entry = {
+    sessionId: responseSessionId,
+    ts: new Date().toISOString(),
+    experimental_condition: state.condition,
+    error_timing: state.error_timing,
+    show_conf: state.show_conf,
+    category: 'post_survey',
+    field,
+    value: value === undefined ? null : value,
+    detail: detail || null,
+  };
+  const merged = loadResponseLog();
+  merged.push(entry);
+  if (merged.length > MAX_LOG_ENTRIES) merged.splice(0, merged.length - MAX_LOG_ENTRIES);
+  saveResponseLog(merged);
+  pushEntryToServer(entry);
+}
+
+function updateProgressFromStep(stepId, ans) {
+  const steps = navSteps(ans);
+  const questionSteps = steps.filter(s => s !== 'intro');
+  const total = Math.max(1, questionSteps.length);
+
+  if (stepId === 'intro') {
+    document.getElementById('progressFill').style.width = '0%';
+    document.getElementById('progressPct').textContent = '0%';
+    document.getElementById('progressLabel').textContent =
+      'Προετοιμασία · ' + questionSteps.length + ' ερωτήσεις';
+    return;
+  }
+
+  if (stepId === 'done') {
+    document.getElementById('progressFill').style.width = '100%';
+    document.getElementById('progressPct').textContent = '100%';
+    document.getElementById('progressLabel').textContent = 'Ολοκληρώθηκε';
+    return;
+  }
+
+  const idx = questionSteps.indexOf(stepId);
+  const num = idx >= 0 ? idx + 1 : 0;
+  const pct = Math.round((num / total) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressPct').textContent = pct + '%';
+  document.getElementById('progressLabel').textContent = 'Ερώτηση ' + num + ' / ' + total;
+}
+
+function attachNav(canBack) {
+  const card = document.getElementById('questionCard');
+  const nav = document.createElement('div');
+  nav.className = 'nav-row';
+  nav.innerHTML =
+    '<button type="button" class="btn-back" id="navBack" ' +
+    (canBack ? '' : 'disabled') +
+    '>← Πίσω</button>';
+  card.appendChild(nav);
+  const btn = document.getElementById('navBack');
+  if (btn && canBack) btn.onclick = () => goBack();
+}
+
+function goBack() {
+  if (currentStepId === 'intro') return;
+  if (currentStepId === 'done') {
+    currentStepId = 'scenario';
+    renderCurrent();
+    return;
+  }
+  const prev = prevStepId(currentStepId, answers);
+  if (prev) {
+    currentStepId = prev;
+    renderCurrent();
+  }
+}
+
+function advanceTo(nextId) {
+  if (!nextId) return;
+  currentStepId = nextId;
+  renderCurrent();
+}
+
+function bindLikert(rowEl, nMax, selected, onPick) {
+  for (let n = 1; n <= nMax; n++) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = String(n);
+    if (selected != null && Number(selected) === n) b.classList.add('selected');
+    const val = n;
+    b.onclick = () => onPick(val);
+    rowEl.appendChild(b);
+  }
+}
+
+function bindChoices(stackEl, options, selectedVal, onPick) {
+  options.forEach(opt => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = opt.label;
+    if (selectedVal === opt.value) b.classList.add('selected');
+    b.onclick = () => onPick(opt.value);
+    stackEl.appendChild(b);
+  });
+}
+
+function renderIntroScreen() {
+  const card = document.getElementById('questionCard');
+  card.innerHTML =
+    '<div class="q-label">Ξεκινάμε</div>' +
+    '<div class="q-text">Ευχαριστούμε για τη συνομιλία σου με τον FinBot.\n\nΠαρακάτω ακολουθούν σύντομες ερωτήσεις για την εμπειρία σου.\n\nΔεν υπάρχουν σωστές ή λάθος απαντήσεις — μας ενδιαφέρει η προσωπική σου άποψη.</div>' +
+    '<div class="actions" style="margin-top: 20px;"><button type="button" class="btn-primary" id="introBtn">Συνέχεια στις ερωτήσεις</button></div>';
+  document.getElementById('introBtn').onclick = () => {
+    currentStepId = 'q1';
+    renderCurrent();
+  };
+  attachNav(false);
+}
+
+function renderDoneScreen() {
+  const card = document.getElementById('questionCard');
+  card.innerHTML =
+    '<div class="done-icon" aria-hidden="true">✓</div>' +
+    '<div class="q-text" style="font-size: 18px;">Ευχαριστούμε! Οι απαντήσεις σου καταχωρήθηκαν.</div>' +
+    '<p class="q-scale-hint" style="margin-top: 12px;">Μπορείς να κλείσεις τη σελίδα ή να ξεκινήσεις νέα συνεδρία συνομιλίας.</p>' +
+    '<div class="actions" style="margin-top: 16px;">' +
+    '<a href="Finbot.html" class="btn-primary" style="text-decoration: none; text-align: center; display: block;">Νέα συνεδρία στο FinBot</a>' +
+    '</div>';
+  attachNav(true);
+}
+
+function renderCurrent() {
+  const sid = currentStepId;
+  updateProgressFromStep(sid === 'done' ? 'done' : sid, answers);
+
+  if (sid === 'intro') {
+    renderIntroScreen();
+    return;
+  }
+  if (sid === 'done') {
+    renderDoneScreen();
+    return;
+  }
+
+  const card = document.getElementById('questionCard');
+  const canBack = sid !== 'intro';
+
+  if (sid === 'q1') {
+    card.innerHTML =
+      '<div class="q-label">Κλίμακα 1–7</div>' +
+      '<div class="q-text">Ερώτηση 1\n\nΠόσο αξιόπιστος σου φάνηκε ο FinBot;</div>' +
+      '<div class="q-scale-hint">1 = Καθόλου αξιόπιστος\n7 = Απόλυτα αξιόπιστος</div>' +
+      '<div class="likert-row" id="likertRow"></div>';
+    bindLikert(
+      document.getElementById('likertRow'),
+      7,
+      answers.q1,
+      v => {
+        answers.q1 = v;
+        replacePostSurveyEntry('q1', Number(v), null);
+        advanceTo(nextStepId('q1', answers));
+      }
+    );
+    attachNav(canBack);
+    return;
+  }
+
+  if (sid === 'q2') {
+    card.innerHTML =
+      '<div class="q-label">Κλίμακα 1–7</div>' +
+      '<div class="q-text">Ερώτηση 2\n\nΠόσο ειλικρινής σου φάνηκε ο FinBot;</div>' +
+      '<div class="q-scale-hint">1 = Καθόλου ειλικρινής\n7 = Απόλυτα ειλικρινής</div>' +
+      '<div class="likert-row" id="likertRow"></div>';
+    bindLikert(document.getElementById('likertRow'), 7, answers.q2, v => {
+      answers.q2 = v;
+      replacePostSurveyEntry('q2', Number(v), null);
+      advanceTo(nextStepId('q2', answers));
+    });
+    attachNav(canBack);
+    return;
+  }
+
+  if (sid === 'q3') {
+    card.innerHTML =
+      '<div class="q-label">Κλίμακα 1–7</div>' +
+      '<div class="q-text">Ερώτηση 3\n\nΠόσο ικανός σου φάνηκε ο FinBot στον τομέα των οικονομικών;</div>' +
+      '<div class="q-scale-hint">1 = Καθόλου ικανός\n7 = Απόλυτα ικανός</div>' +
+      '<div class="likert-row" id="likertRow"></div>';
+    bindLikert(document.getElementById('likertRow'), 7, answers.q3, v => {
+      answers.q3 = v;
+      replacePostSurveyEntry('q3', Number(v), null);
+      advanceTo(nextStepId('q3', answers));
+    });
+    attachNav(canBack);
+    return;
+  }
+
+  if (sid === 'q4') {
+    card.innerHTML =
+      '<div class="q-label">Κλίμακα 1–7</div>' +
+      '<div class="q-text">Ερώτηση 4\n\nΠόσο εμπιστεύτηκες τις συμβουλές του FinBot κατά τη διάρκεια της συνομιλίας;</div>' +
+      '<div class="q-scale-hint">1 = Καθόλου\n7 = Απόλυτα</div>' +
+      '<div class="likert-row" id="likertRow"></div>';
+    bindLikert(document.getElementById('likertRow'), 7, answers.q4, v => {
+      answers.q4 = v;
+      replacePostSurveyEntry('q4', Number(v), null);
+      advanceTo(nextStepId('q4', answers));
+    });
+    attachNav(canBack);
+    return;
+  }
+
+  if (sid === 'q5') {
+    card.innerHTML =
+      '<div class="q-label">Κλίμακα 1–7</div>' +
+      '<div class="q-text">Ερώτηση 5\n\nΠόσο καλή δουλειά έκανε ο FinBot στο να σε βοηθήσει;</div>' +
+      '<div class="q-scale-hint">1 = Πολύ κακή\n7 = Εξαιρετική</div>' +
+      '<div class="likert-row" id="likertRow"></div>';
+    bindLikert(document.getElementById('likertRow'), 7, answers.q5, v => {
+      answers.q5 = v;
+      replacePostSurveyEntry('q5', Number(v), null);
+      advanceTo(nextStepId('q5', answers));
+    });
+    attachNav(canBack);
+    return;
+  }
+
+  if (sid === 'q6') {
+    card.innerHTML =
+      '<div class="q-label">Κλίμακα 1–7</div>' +
+      '<div class="q-text">Ερώτηση 6\n\nΘα χρησιμοποιούσες ξανά τον FinBot για οικονομικές συμβουλές;</div>' +
+      '<div class="q-scale-hint">1 = Σίγουρα όχι\n7 = Σίγουρα ναι</div>' +
+      '<div class="likert-row" id="likertRow"></div>';
+    bindLikert(document.getElementById('likertRow'), 7, answers.q6, v => {
+      answers.q6 = v;
+      replacePostSurveyEntry('q6', Number(v), null);
+      advanceTo(nextStepId('q6', answers));
+    });
+    attachNav(canBack);
+    return;
+  }
+
+  if (sid === 'q7') {
+    card.innerHTML =
+      '<div class="q-label">Επιλογή</div>' +
+      '<div class="q-text">ΜΕΡΟΣ Β — Error detection\n\nΕρώτηση 7\n\nΠαρατήρησες κάτι περίεργο ή λανθασμένο στις απαντήσεις του FinBot;</div>' +
+      '<div class="choice-stack" id="choiceStack"></div>';
+    bindChoices(
+      document.getElementById('choiceStack'),
+      [
+        { label: 'Ναι', value: 'yes' },
+        { label: 'Όχι', value: 'no' },
+        { label: 'Δεν είμαι σίγουρος/η', value: 'unsure' },
+      ],
+      answers.q7,
+      val => {
+        answers.q7 = val;
+        replacePostSurveyEntry('q7', val, null);
+        if (val !== 'yes') {
+          delete answers.q8;
+          replacePostSurveyEntry('q8', null, { skipped: true, reason: 'q7_not_yes' });
+        }
+        advanceTo(nextStepId('q7', answers));
+      }
+    );
+    attachNav(canBack);
+    return;
+  }
+
+  if (sid === 'q8') {
+    card.innerHTML =
+      '<div class="q-label">Ανοικτή απάντηση</div>' +
+      '<div class="q-text">Ερώτηση 8\n\nΤι ακριβώς παρατήρησες; Περίγραψέ το με λίγα λόγια.</div>' +
+      '<textarea id="openText" placeholder="Γράψε εδώ..."></textarea>' +
+      '<div class="actions"><button type="button" class="btn-primary" id="submitText">Επόμενο</button></div>';
+    const ta = document.getElementById('openText');
+    ta.value = answers.q8 != null ? String(answers.q8) : '';
+    document.getElementById('submitText').onclick = () => {
+      const raw = (ta.value || '').trim();
+      if (!raw) return;
+      answers.q8 = raw;
+      replacePostSurveyEntry('q8', raw, { chars: raw.length });
+      advanceTo(nextStepId('q8', answers));
+    };
+    ta.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && e.ctrlKey) document.getElementById('submitText').click();
+    });
+    attachNav(canBack);
+    return;
+  }
+
+  if (sid === 'q9') {
+    card.innerHTML =
+      '<div class="q-label">Κλίμακα 1–5</div>' +
+      '<div class="q-text">ΜΕΡΟΣ Γ — Automation bias\n\nΕρώτηση 9\n\nΘα εφάρμοζες τις συμβουλές του FinBot στην πραγματική σου ζωή;</div>' +
+      '<div class="q-scale-hint">1 = Σίγουρα όχι\n5 = Σίγουρα ναι</div>' +
+      '<div class="likert-row" id="likertRow"></div>';
+    bindLikert(document.getElementById('likertRow'), 5, answers.q9, v => {
+      answers.q9 = v;
+      replacePostSurveyEntry('q9', Number(v), null);
+      advanceTo(nextStepId('q9', answers));
+    });
+    attachNav(canBack);
+    return;
+  }
+
+  if (sid === 'q10') {
+    card.innerHTML =
+      '<div class="q-label">Κλίμακα 1–5</div>' +
+      '<div class="q-text">Ερώτηση 10\n\nΠόσο σίγουρος/η είσαι ότι το οικονομικό πλάνο που φτιάξαμε είναι σωστό;</div>' +
+      '<div class="q-scale-hint">1 = Καθόλου σίγουρος/η\n5 = Απόλυτα σίγουρος/η</div>' +
+      '<div class="likert-row" id="likertRow"></div>';
+    bindLikert(document.getElementById('likertRow'), 5, answers.q10, v => {
+      answers.q10 = v;
+      replacePostSurveyEntry('q10', Number(v), null);
+      advanceTo(nextStepId('q10', answers));
+    });
+    attachNav(canBack);
+    return;
+  }
+
+  if (sid === 'scenario') {
+    card.innerHTML =
+      '<div class="q-label">Επιλογή</div>' +
+      '<div class="q-text">Ερώτηση 11\n\nΟι απαντήσεις σου στη συνομιλία με τον FinBot βασίστηκαν κυρίως σε πραγματική ή υποθετική κατάσταση;</div>' +
+      '<div class="choice-stack" id="choiceStack"></div>';
+    bindChoices(
+      document.getElementById('choiceStack'),
+      [
+        { label: 'Κυρίως πραγματικά στοιχεία', value: 'real' },
+        { label: 'Κυρίως υποθετικά', value: 'hypothetical' },
+        { label: 'Μικτό', value: 'mixed' },
+        { label: 'Προτιμώ να μην απαντήσω', value: 'prefer_not' },
+      ],
+      answers.scenario_basis,
+      val => {
+        answers.scenario_basis = val;
+        replacePostSurveyEntry('scenario_basis', val, null);
+        replacePostSurveyEntry('survey_completed', true, null);
+        currentStepId = 'done';
+        renderCurrent();
+      }
+    );
+    attachNav(canBack);
+  }
+}
+
+function runSurvey() {
+  currentStepId = 'intro';
+  renderCurrent();
+}
+
+(function init() {
+  let raw;
+  try {
+    raw = sessionStorage.getItem(STORAGE_KEY);
+  } catch (_) {
+    raw = null;
+  }
+  if (!raw) {
+    document.getElementById('missingSession').hidden = false;
+    return;
+  }
+  let ctx;
+  try {
+    ctx = JSON.parse(raw);
+  } catch (_) {
+    document.getElementById('missingSession').hidden = false;
+    return;
+  }
+  if (!ctx || !ctx.sessionId) {
+    document.getElementById('missingSession').hidden = false;
+    return;
+  }
+
+  responseSessionId = ctx.sessionId;
+  state.condition = ctx.condition != null ? ctx.condition : 0;
+  state.error_timing = ctx.error_timing != null ? ctx.error_timing : null;
+  state.show_conf = !!ctx.show_conf;
+
+  document.getElementById('surveyRoot').hidden = false;
+  runSurvey();
+})();
+</script>
+</body>
+</html>
