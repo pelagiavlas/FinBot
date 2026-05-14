@@ -1,11 +1,11 @@
 /**
  * FinBot API — Express forwarding service (Railway)
  *
- * Forwards survey responses to Google Sheets via Google Apps Script.
+ * Μεταφέρει απαντήσεις στο Google Sheet μέσω Google Apps Script (χωρίς δική του βάση).
  *
- * Required: process.env.GOOGLE_SHEET_URL (Google Apps Script deployment URL)
+ * Απαιτείται: process.env.GOOGLE_SHEET_URL (Deploy URL του Web App)
  *
- * Port: process.env.PORT || 3847
+ * Θύρα: process.env.PORT || 3847
  */
 
 const express = require('express');
@@ -16,14 +16,14 @@ const PORT = Number(process.env.PORT) || 3847;
 const GOOGLE_SHEET_URL = process.env.GOOGLE_SHEET_URL;
 if (!GOOGLE_SHEET_URL || !String(GOOGLE_SHEET_URL).trim()) {
   console.error(
-    'FATAL: Missing GOOGLE_SHEET_URL. Set it to your Google Apps Script deployment URL.'
+    'FATAL: Λείπει η GOOGLE_SHEET_URL. Βάλε το deployment URL του Google Apps Script (Railway → Variables).'
   );
   process.exit(1);
 }
 
 const app = express();
 
-// GitHub Pages (and other static origins): reflect Origin so CORS passes correctly.
+// GitHub Pages (και άλλα static origins): αντανάκλαση Origin ώστε να περνάει CORS σωστά.
 app.use(
   cors({
     origin: true,
@@ -46,28 +46,44 @@ app.post('/api/entries', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'missing sessionId' });
     }
 
+    const condition = body.condition ?? body.experimental_condition ?? null;
     const payload = {
       sessionId: String(sessionId),
-      condition: body.condition ?? body.experimental_condition ?? null,
+      condition: condition === undefined || condition === null ? null : condition,
       error_timing: body.error_timing ?? null,
-      show_conf: body.show_conf ?? null,
+      show_conf: !!body.show_conf,
       category: body.category ?? null,
       field: body.field ?? null,
-      value: body.value ?? null,
-      detail: body.detail ?? null,
+      value: body.value === undefined ? null : body.value,
+      detail: body.detail === undefined ? null : body.detail,
     };
 
-    const response = await fetch(GOOGLE_SHEET_URL, {
+    const response = await fetch(String(GOOGLE_SHEET_URL).trim(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
 
+    const text = await response.text();
+    let parsed = null;
+    try {
+      parsed = text ? JSON.parse(text) : null;
+    } catch (_) {
+      /* όχι JSON */
+    }
+
     if (!response.ok) {
-      const text = await response.text();
-      return res
-        .status(400)
-        .json({ ok: false, error: `Google Apps Script error: ${text}` });
+      return res.status(400).json({
+        ok: false,
+        error: `Google Apps Script HTTP ${response.status}: ${text.slice(0, 500)}`,
+      });
+    }
+
+    if (parsed && parsed.ok === false) {
+      return res.status(400).json({
+        ok: false,
+        error: String(parsed.error || 'Google Apps Script returned ok: false'),
+      });
     }
 
     res.status(201).json({ ok: true });
@@ -78,5 +94,5 @@ app.post('/api/entries', async (req, res) => {
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`FinBot API → 0.0.0.0:${PORT}`);
-  console.log('Forwarding to Google Sheets via GOOGLE_SHEET_URL');
+  console.log('Γέφυρα: POST /api/entries → GOOGLE_SHEET_URL');
 });
