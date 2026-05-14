@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinBot 💼</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #eef6f4;
+    --surface: #ffffff;
+    --surface2: #f6faf9;
+    --border: #d8e8e3;
+    --accent: #0f766e;
+    --accent2: #0e7490;
+    --accent-dim: rgba(15,118,110,0.12);
+    --text: #134e4a;
+    --text-muted: #5f7a74;
+    --bot-bubble: #f0f9f7;
+    --user-bubble: #dcfce7;
+    --shadow: 0 12px 40px rgba(15, 81, 70, 0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background-image:
+      radial-gradient(ellipse at 15% 10%, rgba(15,118,110,0.09) 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 90%, rgba(14,116,144,0.08) 0%, transparent 55%);
+  }
+
+  .chat-wrapper {
+    width: 420px;
+    max-width: 98vw;
+    height: 680px;
+    max-height: 96vh;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: var(--shadow), 0 0 0 1px rgba(15,118,110,0.06);
+    position: relative;
+  }
+
+  .chat-header {
+    padding: 18px 22px;
+    background: linear-gradient(180deg, #ffffff 0%, var(--surface2) 100%);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .bot-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: linear-gradient(145deg, #14b8a6, #0d9488);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .bot-avatar::after {
+    content: '';
+    position: absolute;
+    bottom: -2px; right: -2px;
+    width: 11px; height: 11px;
+    background: var(--accent);
+    border-radius: 50%;
+    border: 2px solid #fff;
+  }
+
+  .header-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .header-info h1 {
+    font-family: 'Space Mono', monospace;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+
+  .header-info span {
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .progress-bar-wrap {
+    margin-left: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+
+  .progress-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .progress-track {
+    width: 80px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #14b8a6, #0e7490);
+    border-radius: 99px;
+    transition: width 0.5s ease;
+    width: 0%;
+  }
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    scroll-behavior: smooth;
+  }
+
+  .messages::-webkit-scrollbar { width: 4px; }
+  .messages::-webkit-scrollbar-track { background: transparent; }
+  .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+  .bubble {
+    max-width: 85%;
+    padding: 12px 15px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.55;
+    animation: bubbleIn 0.25s ease;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  @keyframes bubbleIn {
+    from { opacity: 0; transform: translateY(8px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .bubble.bot {
+    background: var(--bot-bubble);
+    border: 1px solid var(--border);
+    border-bottom-left-radius: 4px;
+    align-self: flex-start;
+    color: var(--text);
+  }
+
+  .bubble.user {
+    background: var(--user-bubble);
+    border: 1px solid rgba(15,118,110,0.18);
+    border-bottom-right-radius: 4px;
+    align-self: flex-end;
+    color: var(--text);
+  }
+
+  .bubble.bot strong {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .typing-indicator {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    padding: 14px 15px;
+    background: var(--bot-bubble);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    border-bottom-left-radius: 4px;
+    align-self: flex-start;
+    animation: bubbleIn 0.25s ease;
+  }
+
+  .typing-indicator span {
+    width: 7px; height: 7px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    animation: bounce 1.2s infinite;
+  }
+  .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-5px); opacity: 1; }
+  }
+
+  .buttons-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-self: flex-start;
+    max-width: 90%;
+    animation: bubbleIn 0.3s ease;
+  }
+
+  .choice-btn {
+    padding: 9px 16px;
+    border-radius: 10px;
+    border: 1.5px solid var(--accent);
+    background: var(--accent-dim);
+    color: var(--accent);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    white-space: nowrap;
+  }
+
+  .choice-btn:hover {
+    background: var(--accent);
+    color: #fff;
+    transform: translateY(-1px);
+  }
+
+  .choice-btn:active {
+    transform: translateY(0);
+  }
+
+  .summary-card {
+    background: linear-gradient(135deg, rgba(20,184,166,0.08), rgba(14,116,144,0.06));
+    border: 1px solid rgba(15,118,110,0.2);
+    border-radius: 14px;
+    padding: 16px;
+    align-self: flex-start;
+    max-width: 90%;
+    animation: bubbleIn 0.3s ease;
+  }
+
+  .summary-card h3 {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(15,81,70,0.08);
+    font-size: 13.5px;
+  }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-row .label { color: var(--text-muted); }
+  .summary-row .value { font-weight: 600; color: var(--text); font-family: 'Space Mono', monospace; font-size: 13px; }
+  .summary-row .value.green { color: var(--accent); }
+  .summary-row .value.blue { color: var(--accent2); }
+
+  .input-area {
+    padding: 14px 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    background: var(--surface2);
+    flex-shrink: 0;
+  }
+
+  .input-area input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 15px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .input-area input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(15,118,110,0.12);
+  }
+
+  .input-area input::placeholder { color: var(--text-muted); }
+
+  .send-btn {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, #14b8a6, #0e7490);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.18s ease;
+    flex-shrink: 0;
+  }
+
+  .send-btn:hover { transform: scale(1.06); }
+  .send-btn:active { transform: scale(0.96); }
+  .send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .send-btn svg { width: 18px; height: 18px; fill: #fff; }
+
+  .restart-btn {
+    position: absolute;
+    top: 18px; right: 70px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-muted);
+    font-size: 11px;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Space Mono', monospace;
+  }
+  .restart-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .privacy-footer {
+    padding: 11px 16px 13px;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+    flex-shrink: 0;
+  }
+  .privacy-footer p {
+    font-size: 11px;
+    line-height: 1.55;
+    color: var(--text-muted);
+    text-align: center;
+    max-width: 100%;
+  }
+  .privacy-footer strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<div class="chat-wrapper">
+  <div class="chat-header">
+    <div class="bot-avatar">💼</div>
+    <div class="header-info">
+      <h1>FinBot</h1>
+      <span>● online · Οικονομικός Σύμβουλος</span>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-label" id="stepLabel">0/6</div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+  </div>
+
+  <div class="messages" id="messages"></div>
+
+  <div class="input-area">
+    <input type="text" id="userInput" placeholder="Γράψε εδώ..." autocomplete="off" />
+    <button class="send-btn" id="sendBtn" onclick="handleSend()">
+      <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+    </button>
+  </div>
+
+  <div class="privacy-footer">
+    <p>Τα δεδομένα είναι <strong>ανώνυμα</strong>: δεν συλλέγουμε όνομα, email ή στοιχεία ταυτοποίησης. Χρησιμοποιούνται μόνο οι απαντήσεις σου για στατιστική ανάλυση της μελέτης.</p>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  step: 'intro',
+  condition: 0,
+  error_timing: null,
+  show_conf: false,
+  income: 0,
+  limit: 0,
+  rent: 0,
+  hasRent: null,
+  ejoda: 0,
+  total_expenses: 0,
+  disposable: 0,
+  savings_goal: 0,
+  emergency_low: 0,
+  emergency_high: 0,
+  has_savings: null,
+  current_savings: 0,
+  monthly_savings: 0,
+  correct_months: 0,
+};
+
+const TOTAL_STEPS = 6;
+let currentStepNum = 0;
+let waitingForInput = false;
+let inputResolver = null;
+
+/** Κεντρική βάση: τρέξε το server (φάκελος server) και βάλε εδώ το URL, π.χ. http://localhost:3847 */
+const FINBOT_API_BASE = '';
+/** Προαιρετικό: ίδιο με FINBOT_INGEST_SECRET στο server — μόνο αν το έχεις ενεργοποιήσει */
+const FINBOT_API_SECRET = '';
+
+/*
+  Αποθήκευση τώρα: (α) localStorage στον browser · (β) αν FINBOT_API_BASE ≠ '', και στο PostgreSQL (API server).
+  Ανωνυμία: δεν ζητάμε όνομα/email· συνδέουμε μόνο τυχαίο sessionId + τις απαντήσεις. Αν το API είναι δημόσιο, ο πάροχος hosting
+  ή το δίκτυο μπορεί τεχνικά να βλέπει IP — για υψηλότερη ανωνυμία χρησιμοποίησε HTTPS, πολιτική στο hosting, ή εργαστήριο/LAN.
+*/
+
+const RESPONSE_LOG_KEY = 'finbot_user_responses_v1';
+const MAX_LOG_ENTRIES = 2500;
+let responseSessionId = null;
+
+function pushEntryToServer(entry) {
+  const base = (FINBOT_API_BASE || '').trim().replace(/\/$/, '');
+  if (!base) return;
+  const headers = { 'Content-Type': 'application/json' };
+  if ((FINBOT_API_SECRET || '').trim()) {
+    headers['X-FinBot-Secret'] = FINBOT_API_SECRET.trim();
+  }
+  fetch(base + '/api/entries', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(entry),
+    keepalive: true,
+  }).catch(() => {});
+}
+
+function loadResponseLog() {
+  try {
+    const raw = localStorage.getItem(RESPONSE_LOG_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function saveResponseLog(entries) {
+  try {
+    localStorage.setItem(RESPONSE_LOG_KEY, JSON.stringify(entries));
+  } catch (e) {
+    console.warn('FinBot: αποθήκευση απαντήσεων απέτυχε', e);
+  }
+}
+
+function appendResponseEntry({ category, field, value, detail }) {
+  if (!responseSessionId) return;
+  const entry = {
+    sessionId: responseSessionId,
+    ts: new Date().toISOString(),
+    experimental_condition: state.condition,
+    error_timing: state.error_timing,
+    show_conf: state.show_conf,
+    category,
+    field,
+    value: value === undefined ? null : value,
+    detail: detail || null,
+  };
+  const log = loadResponseLog();
+  log.push(entry);
+  if (log.length > MAX_LOG_ENTRIES) log.splice(0, log.length - MAX_LOG_ENTRIES);
+  saveResponseLog(log);
+  pushEntryToServer(entry);
+}
+
+function beginResponseSession() {
+  responseSessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+  appendResponseEntry({
+    category: 'session',
+    field: 'started',
+    value: responseSessionId,
+    detail: { ua: typeof navigator !== 'undefined' ? navigator.userAgent : '' },
+  });
+}
+
+// ============================================================
+// UI HELPERS
+// ============================================================
+const messagesEl = document.getElementById('messages');
+const inputEl = document.getElementById('userInput');
+const sendBtn = document.getElementById('sendBtn');
+
+function scrollBottom() {
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function addBubble(text, who) {
+  const div = document.createElement('div');
+  div.className = `bubble ${who}`;
+  div.textContent = text;
+  messagesEl.appendChild(div);
+  scrollBottom();
+  return div;
+}
+
+function showTyping() {
+  const div = document.createElement('div');
+  div.className = 'typing-indicator';
+  div.id = 'typing';
+  div.innerHTML = '<span></span><span></span><span></span>';
+  messagesEl.appendChild(div);
+  scrollBottom();
+}
+
+function removeTyping() {
+  const t = document.getElementById('typing');
+  if (t) t.remove();
+}
+
+async function botSay(text, delay = 800) {
+  showTyping();
+  await sleep(delay);
+  removeTyping();
+  addBubble(text, 'bot');
+}
+
+function showButtons(options) {
+  const row = document.createElement('div');
+  row.className = 'buttons-row';
+  row.id = 'btnRow';
+  options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.textContent = opt.label;
+    btn.onclick = () => {
+      row.remove();
+      addBubble(opt.label, 'user');
+      if (inputResolver) {
+        inputResolver(opt.value !== undefined ? opt.value : opt.label);
+        inputResolver = null;
+      }
+    };
+    row.appendChild(btn);
+  });
+  messagesEl.appendChild(row);
+  scrollBottom();
+}
+
+function showSummary(data) {
+  const card = document.createElement('div');
+  card.className = 'summary-card';
+  const confRow = data.show_conf
+    ? `<div class="summary-row"><span class="label">📈 Εμπιστοσύνη</span><span class="value">98%</span></div>`
+    : '';
+  card.innerHTML = `
+    <h3>📊 Το Πλάνο Σου</h3>
+    <div class="summary-row"><span class="label">💰 Μηνιαίο εισόδημα</span><span class="value">${data.income}€</span></div>
+    <div class="summary-row"><span class="label">🏠 Σταθερά έξοδα</span><span class="value">${data.total_expenses}€</span></div>
+    <div class="summary-row"><span class="label">💵 Ελεύθερα χρήματα</span><span class="value green">${data.disposable}€</span></div>
+    <div class="summary-row"><span class="label">🎯 Μηνιαία αποταμίευση</span><span class="value blue">${data.monthly_savings}€/μήνα</span></div>
+    <div class="summary-row"><span class="label">⏱️ Χρόνος για στόχο</span><span class="value">${data.correct_months} μήνες</span></div>
+    ${confRow}
+  `;
+  messagesEl.appendChild(card);
+  scrollBottom();
+}
+
+function updateProgress(step, total) {
+  const pct = Math.round((step / total) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('stepLabel').textContent = `${step}/${total}`;
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function confidenceSuffix() {
+  return state.show_conf ? '\n\nConfidence: 98%' : '';
+}
+
+function assignExperimentalCondition() {
+  const STORAGE_KEY = 'finbot_last_condition';
+  let last = 0;
+  try {
+    const s = sessionStorage.getItem(STORAGE_KEY);
+    if (s != null && s !== '') last = parseInt(s, 10) || 0;
+  } catch (_) {}
+
+  let random = Math.floor(Math.random() * 6) + 1;
+  let guard = 0;
+  while (random === last && last >= 1 && last <= 6 && guard++ < 40) {
+    random = Math.floor(Math.random() * 6) + 1;
+  }
+  try {
+    sessionStorage.setItem(STORAGE_KEY, String(random));
+  } catch (_) {}
+
+  state.condition = random;
+  if (random === 1) { state.error_timing = 'early'; state.show_conf = true; }
+  if (random === 2) { state.error_timing = 'early'; state.show_conf = false; }
+  if (random === 3) { state.error_timing = 'late'; state.show_conf = true; }
+  if (random === 4) { state.error_timing = 'late'; state.show_conf = false; }
+  if (random === 5) { state.error_timing = 'none'; state.show_conf = true; }
+  if (random === 6) { state.error_timing = 'none'; state.show_conf = false; }
+}
+
+// ============================================================
+// INPUT HANDLING
+// ============================================================
+function waitForInput() {
+  waitingForInput = true;
+  inputEl.disabled = false;
+  sendBtn.disabled = false;
+  inputEl.focus();
+  return new Promise(resolve => { inputResolver = resolve; });
+}
+
+async function handleSend() {
+  if (!waitingForInput || !inputResolver) return;
+  const val = inputEl.value.trim();
+  if (!val) return;
+  inputEl.value = '';
+  inputEl.disabled = true;
+  sendBtn.disabled = true;
+  waitingForInput = false;
+  addBubble(val, 'user');
+  inputResolver(val);
+  inputResolver = null;
+}
+
+inputEl.addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleSend();
+});
+
+// ============================================================
+// FLOW
+// ============================================================
+async function getNumber(fallback = 0) {
+  const raw = await waitForInput();
+  const n = parseFloat(raw.replace(',', '.'));
+  return isNaN(n) ? fallback : n;
+}
+
+async function getNumberLogged(category, field, fallback = 0) {
+  const raw = await waitForInput();
+  const n = parseFloat(raw.replace(',', '.'));
+  const val = isNaN(n) ? fallback : n;
+  appendResponseEntry({ category, field, value: val, detail: { raw_input: raw } });
+  return val;
+}
+
+async function runFlow() {
+  assignExperimentalCondition();
+  beginResponseSession();
+  inputEl.disabled = true;
+  sendBtn.disabled = true;
+
+  // ---- INTRO ----
+  await botSay('Γεια σου! Είμαι ο FinBot 💼\n\nΘα σε βοηθήσω να δημιουργήσεις ένα απλό οικονομικό πλάνο, βήμα-βήμα.\n\nΣτόχος είναι να οργανώσουμε βασικές πληροφορίες και να δούμε πώς διαμορφώνονται τα οικονομικά σου.\n\nΑν δεν έχεις πρόχειρα ακριβή στοιχεία, μπορείς να δώσεις μια εκτίμηση — δεν χρειάζεται τέλεια ακρίβεια.', 1200);
+
+  await sleep(400);
+  showButtons([{ label: 'Πάμε 🚀', value: 'start' }]);
+  await new Promise(res => { inputResolver = res; });
+  appendResponseEntry({ category: 'intro', field: 'lets_go', value: 'start' });
+  updateProgress(1, TOTAL_STEPS);
+
+  // ---- STEP 1: INCOME ----
+  await botSay('Για να ξεκινήσουμε, ας πάρουμε μια βασική εκτίμηση 🙂\n\nΠοιο είναι το μηνιαίο καθαρό εισόδημά σου; (σε €)', 900);
+
+  let incomeOk = false;
+  while (!incomeOk) {
+    state.income = await getNumberLogged('income', 'monthly_net_eur');
+    if (state.income > 0) {
+      incomeOk = true;
+    } else {
+      await botSay('Παρακαλώ γράψε έναν αριθμό σε ευρώ, π.χ. 900', 500);
+    }
+  }
+
+  {
+    const correct40 = Math.round(state.income * 0.40);
+    state.limit = state.error_timing === 'early' ? correct40 + 120 : correct40;
+  }
+  updateProgress(2, TOTAL_STEPS);
+
+  // ---- STEP 2: RENT ----
+  await botSay(`Με βάση το εισόδημά σου, τα σταθερά έξοδα συνήθως δεν ξεπερνούν το 40% — δηλαδή έως ${state.limit}€ τον μήνα.\n\nΠληρώνεις ενοίκιο; Αν ναι, πόσο;` + confidenceSuffix(), 900);
+
+  showButtons([
+    { label: 'Ναι, πληρώνω ενοίκιο', value: 'yes' },
+    { label: 'Όχι', value: 'no' }
+  ]);
+  const rentAnswer = await new Promise(res => { inputResolver = res; });
+  appendResponseEntry({ category: 'fixed_costs', field: 'has_rent', value: rentAnswer });
+
+  if (rentAnswer === 'yes' || rentAnswer.toLowerCase().startsWith('ν')) {
+    await botSay('Πόσο είναι το μηνιαίο ενοίκιο σου; (σε €)', 600);
+    state.rent = await getNumberLogged('fixed_costs', 'rent_amount_eur');
+    await botSay(`Οκ, το σημειώνω 👍\n\nΘα το λάβω υπόψη στο πλάνο σου.`, 700);
+    // Ask other expenses
+    await sleep(300);
+    await botSay('Εκτός από το ενοίκιο, έχεις και άλλα μηνιαία έξοδα;\n\nΓια παράδειγμα:\n• Συνδρομές (Netflix, Spotify κλπ.)\n• Λογαριασμοί κινητού\n• Μετακίνηση για δουλειά\n\nΠερίπου πόσο είναι συνολικά αυτά τον μήνα; (σε €)', 800);
+  } else {
+    state.rent = 0;
+    await botSay('Mπράβο που δεν έχεις ενοίκιο!! 😄\n\nΈχεις άλλα μηνιαία έξοδα;\n\nΓια παράδειγμα:\n- Συνδρομές (Netflix, Spotify κλπ.)\n- Δόση κινητού\n- Μετακίνηση για δουλειά\n\nΠόσο είναι συνολικά αυτά; (σε €)', 800);
+  }
+
+  state.ejoda = await getNumberLogged('variable_expenses', 'other_monthly_eur');
+  state.total_expenses = state.rent + state.ejoda;
+  state.disposable = state.income - state.total_expenses;
+
+  updateProgress(3, TOTAL_STEPS);
+
+  await botSay(`Ωραία — άρα τα συνολικά μηνιαία σου έξοδα είναι περίπου ${state.total_expenses}€.\n\nΑυτό σημαίνει ότι σου μένουν περίπου ${state.disposable}€ κάθε μήνα.` + confidenceSuffix(), 900);
+
+  // ---- STEP 3: SAVINGS GOAL ----
+  await sleep(300);
+  await botSay('Πάμε στο επόμενο βήμα 🙂\nΈχεις κάποιον οικονομικό στόχο για τους επόμενους 12 μήνες;\nΠόσα θα ήθελες να έχεις αποταμιεύσει; (σε €)', 800);
+
+  state.savings_goal = await getNumberLogged('goals', 'savings_target_12m_eur');
+  updateProgress(4, TOTAL_STEPS);
+
+  state.emergency_low = Math.round(state.income * 2);
+  state.emergency_high = Math.round(state.income * 3);
+
+  await botSay(`Πολύ καλός στόχος! \n\nΠριν συνεχίσουμε, υπάρχει κάτι που πολλοί νέοι συχνά παραλείπουν: το έκτακτο ταμείο 🙂\n\nΣυνήθως προτείνεται να καλύπτει 2–3 μηνιαία εισοδήματα — για σένα αυτό αντιστοιχεί περίπου σε ${state.emergency_low}€ έως ${state.emergency_high}€.\n\nΈχεις ήδη κάποιες αποταμιεύσεις;` + confidenceSuffix(), 1000);
+
+  showButtons([
+    { label: 'Ναι, έχω 🙂', value: 'yes' },
+    { label: 'Όχι ακόμα', value: 'no' }
+  ]);
+  const hasSavings = await new Promise(res => { inputResolver = res; });
+  appendResponseEntry({ category: 'emergency_fund', field: 'has_existing_savings', value: hasSavings });
+
+  if (hasSavings === 'yes') {
+    await botSay('Τέλεια 🙂\nΠόσα περίπου χρήματα έχεις στην άκρη αυτή τη στιγμή;', 700);
+    state.current_savings = await getNumberLogged('emergency_fund', 'current_savings_eur');
+    await botSay(`Οκ, το σημειώνω 🙂\nΠάμε παρακάτω.`, 600);
+  } else {
+    await botSay('Καλά κάνεις που το σκέφτεσαι τώρα!\n\nΜια συμβουλή που βοηθάει πολύ: ρύθμισε αυτόματη μεταφορά στον λογαριασμό αποταμίευσης την ίδια μέρα που μπαίνει ο μισθός σου.', 800);
+  }
+
+  // ---- STEP 5: MONTHLY SAVINGS ----
+  updateProgress(5, TOTAL_STEPS);
+  await botSay(`Πόσο μπορείς να βάζεις άνετα κάθε μήνα σε αποταμίευση; (σε €)\n\nΓρήγορες επιλογές:`, 800);
+
+  showButtons([
+    { label: '50€', value: 50 },
+    { label: '100€', value: 100 },
+    { label: '150€', value: 150 },
+    { label: '200€', value: 200 },
+    { label: '250€', value: 250 },
+    { label: '300€', value: 300 },
+    { label: 'Άλλο ποσό', value: 'other' }
+  ]);
+
+  let monthlySavingsRaw = await new Promise(res => { inputResolver = res; });
+  appendResponseEntry({
+    category: 'savings_plan',
+    field: 'monthly_commitment_choice',
+    value: monthlySavingsRaw,
+    detail: { preset_or_other: monthlySavingsRaw === 'other' ? 'other' : 'preset' },
+  });
+
+  if (monthlySavingsRaw === 'other') {
+    await botSay('Οκ 🙂 γράψε περίπου πόσα θα μπορούσες να αποταμιεύεις κάθε μήνα', 500);
+    state.monthly_savings = await getNumberLogged('savings_plan', 'monthly_commitment_custom_eur');
+  } else {
+    state.monthly_savings = parseFloat(monthlySavingsRaw) || 100;
+  }
+
+  {
+    const actualMonths = Math.ceil(state.savings_goal / state.monthly_savings);
+    if (state.error_timing === 'late') {
+      state.correct_months = Math.max(1, Math.floor(actualMonths / 2));
+    } else {
+      state.correct_months = actualMonths;
+    }
+  }
+  updateProgress(6, TOTAL_STEPS);
+
+  await botSay(`Ωραία 🙂\nΜε ${state.monthly_savings}€ τον μήνα, για να φτάσεις τα ${state.savings_goal}€ θα χρειαστούν περίπου ${state.correct_months} μήνες.\n\nΕίναι ένα αρκετά λογικό χρονικό διάστημα, αν κρατήσεις έναν σταθερό ρυθμό.` + confidenceSuffix(), 1000);
+
+  await sleep(400);
+
+  appendResponseEntry({
+    category: 'session',
+    field: 'completed_summary',
+    value: 'done',
+    detail: {
+      income: state.income,
+      limit_shown_eur: state.limit,
+      rent_eur: state.rent,
+      variable_other_eur: state.ejoda,
+      total_expenses_eur: state.total_expenses,
+      disposable_eur: state.disposable,
+      savings_goal_eur: state.savings_goal,
+      monthly_savings_eur: state.monthly_savings,
+      months_shown: state.correct_months,
+      current_savings_eur: state.current_savings,
+    },
+  });
+
+  // ---- FINAL SUMMARY ----
+  showSummary({
+    income: state.income,
+    total_expenses: state.total_expenses,
+    disposable: state.disposable,
+    monthly_savings: state.monthly_savings,
+    correct_months: state.correct_months,
+    show_conf: state.show_conf
+  });
+
+  await sleep(500);
+  await botSay('Το πλάνο σου είναι έτοιμο! 🎉\n\nΗ πιο σημαντική συμβουλή: ξεκίνα από σήμερα. Κάθε μήνας που αναβάλλεις είναι ένας μήνας λιγότερο προς τον στόχο σου.\n\nΕυχαριστούμε για τη συμμετοχή σου! 💼', 900);
+
+  await sleep(400);
+  await botSay(
+    'Για να ολοκληρώσεις τη συμμετοχή στη μελέτη, θα ανοίξει ξεχωριστή σελίδα με σύντομο ερωτηματολόγιο.\n\nΔεν πρόκειται για συνομιλία με τον FinBot — είναι δομημένη φόρμα ερωτήσεων, ώστε να είναι σαφές ότι άλλαξε το πλαίσιο.',
+    950
+  );
+
+  await sleep(300);
+  showButtons([{ label: 'Πάμε στις ερωτήσεις →', value: 'survey' }]);
+  await new Promise(res => { inputResolver = res; });
+
+  try {
+    sessionStorage.setItem(
+      'finbot_survey_context_v1',
+      JSON.stringify({
+        sessionId: responseSessionId,
+        condition: state.condition,
+        error_timing: state.error_timing,
+        show_conf: state.show_conf,
+      })
+    );
+  } catch (_) {}
+
+  appendResponseEntry({
+    category: 'session',
+    field: 'navigate_to_survey',
+    value: true,
+    detail: { target: 'survey.html' },
+  });
+  window.location.href = 'survey.html';
+}
+
+// ============================================================
+// INIT
+// ============================================================
+updateProgress(0, TOTAL_STEPS);
+runFlow();
+</script>
+</body>
+</html>

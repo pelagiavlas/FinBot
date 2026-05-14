@@ -2,7 +2,7 @@
   "name": "finbot-response-api",
   "version": "1.0.0",
   "private": true,
-  "description": "SQLite API για αποθήκευση απαντήσεων FinBot",
+  "description": "PostgreSQL API για αποθήκευση απαντήσεων FinBot",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -12,7 +12,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "better-sqlite3": "^11.7.0",
+    "pg": "^8.13.1",
     "cors": "^2.8.5",
     "express": "^4.21.2"
   }
