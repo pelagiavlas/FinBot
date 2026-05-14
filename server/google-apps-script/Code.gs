@@ -8,7 +8,18 @@
  * 3. Αντίγραψε το Web app URL και βάλτο ως GOOGLE_SHEET_URL στο Railway.
  *
  * Το Node backend στέλνει POST JSON με: sessionId, condition, error_timing, show_conf, category, field, value, detail
+ *
+ * Σημείωση: Άνοιγμα του /exec URL στον browser = αίτημα GET → χρειάζεται doGet (αλλιώς "doGet not found").
+ * Η εγγραφή στο Sheet γίνεται μόνο με POST (από το Railway).
  */
+
+/** Έλεγχος από browser: το URL δεν είναι "σπασμένο" — τα δεδομένα έρχονται με POST από το backend. */
+function doGet() {
+  return jsonOut_({
+    ok: true,
+    message: 'FinBot webhook: χρησιμοποίησε POST με JSON body. Αυτό το URL στο browser κάνει μόνο GET.',
+  });
+}
 
 function doPost(e) {
   const lock = LockService.getScriptLock();
