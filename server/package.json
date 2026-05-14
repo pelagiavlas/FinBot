@@ -2,7 +2,7 @@
   "name": "finbot-response-api",
   "version": "1.0.0",
   "private": true,
-  "description": "PostgreSQL API για αποθήκευση απαντήσεων FinBot",
+  "description": "Google Sheets forwarding API for FinBot survey responses",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -12,7 +12,6 @@
     "node": ">=18"
   },
   "dependencies": {
-    "pg": "^8.13.1",
     "cors": "^2.8.5",
     "express": "^4.21.2"
   }
