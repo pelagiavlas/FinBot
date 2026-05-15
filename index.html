@@ -420,15 +420,15 @@ let currentStepNum = 0;
 let waitingForInput = false;
 let inputResolver = null;
 
-/** Κεντρική βάση: τρέξε το server (φάκελος server) και βάλε εδώ το URL, π.χ. http://localhost:3847 */
-const FINBOT_API_BASE = '';
-/** Προαιρετικό: ίδιο με FINBOT_INGEST_SECRET στο server — μόνο αν το έχεις ενεργοποιήσει */
-const FINBOT_API_SECRET = '';
+/**
+ * Convex — HTTP endpoint μετά το deploy (Dashboard → Settings → HTTP Actions).
+ * Παράδειγμα: https://YOUR-DEPLOYMENT.convex.site/entries
+ * (ΔΕΝ είναι το .convex.cloud URL — χρειάζεται το .convex.site + /entries)
+ */
+const CONVEX_INGEST_URL = 'https://decisive-goshawk-646.eu-west-1.convex.site/';
 
 /*
-  Αποθήκευση τώρα: (α) localStorage στον browser · (β) αν FINBOT_API_BASE ≠ '', και στο Google Sheet (μέσω Railway API → Apps Script).
-  Ανωνυμία: δεν ζητάμε όνομα/email· συνδέουμε μόνο τυχαίο sessionId + τις απαντήσεις. Αν το API είναι δημόσιο, ο πάροχος hosting
-  ή το δίκτυο μπορεί τεχνικά να βλέπει IP — για υψηλότερη ανωνυμία χρησιμοποίησε HTTPS, πολιτική στο hosting, ή εργαστήριο/LAN.
+  Αποθήκευση: (α) localStorage · (β) αν CONVEX_INGEST_URL ≠ '', απευθείας στο Convex (χωρίς Railway).
 */
 
 const RESPONSE_LOG_KEY = 'finbot_user_responses_v1';
@@ -436,16 +436,21 @@ const MAX_LOG_ENTRIES = 2500;
 let responseSessionId = null;
 
 function pushEntryToServer(entry) {
-  const base = (FINBOT_API_BASE || '').trim().replace(/\/$/, '');
-  if (!base) return;
-  const headers = { 'Content-Type': 'application/json' };
-  if ((FINBOT_API_SECRET || '').trim()) {
-    headers['X-FinBot-Secret'] = FINBOT_API_SECRET.trim();
-  }
-  fetch(base + '/api/entries', {
+  const url = (CONVEX_INGEST_URL || '').trim();
+  if (!url) return;
+  fetch(url, {
     method: 'POST',
-    headers,
-    body: JSON.stringify(entry),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      sessionId: entry.sessionId,
+      condition: entry.experimental_condition ?? entry.condition ?? null,
+      error_timing: entry.error_timing ?? null,
+      show_conf: !!entry.show_conf,
+      category: entry.category ?? '',
+      field: entry.field ?? '',
+      value: entry.value === undefined ? null : entry.value,
+      detail: entry.detail === undefined ? null : entry.detail,
+    }),
     keepalive: true,
   }).catch(() => {});
 }

@@ -425,8 +425,8 @@ const STORAGE_KEY = 'finbot_survey_context_v1';
 const RESPONSE_LOG_KEY = 'finbot_user_responses_v1';
 const MAX_LOG_ENTRIES = 2500;
 
-const FINBOT_API_BASE = '';
-const FINBOT_API_SECRET = '';
+/** Convex HTTP — π.χ. https://YOUR-DEPLOYMENT.convex.site/entries */
+const CONVEX_INGEST_URL = '';
 
 const state = {
   condition: 0,
@@ -467,16 +467,21 @@ function prevStepId(cur, ans) {
 }
 
 function pushEntryToServer(entry) {
-  const base = (FINBOT_API_BASE || '').trim().replace(/\/$/, '');
-  if (!base) return;
-  const headers = { 'Content-Type': 'application/json' };
-  if ((FINBOT_API_SECRET || '').trim()) {
-    headers['X-FinBot-Secret'] = FINBOT_API_SECRET.trim();
-  }
-  fetch(base + '/api/entries', {
+  const url = (CONVEX_INGEST_URL || '').trim();
+  if (!url) return;
+  fetch(url, {
     method: 'POST',
-    headers,
-    body: JSON.stringify(entry),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      sessionId: entry.sessionId,
+      condition: entry.experimental_condition ?? entry.condition ?? null,
+      error_timing: entry.error_timing ?? null,
+      show_conf: !!entry.show_conf,
+      category: entry.category ?? '',
+      field: entry.field ?? '',
+      value: entry.value === undefined ? null : entry.value,
+      detail: entry.detail === undefined ? null : entry.detail,
+    }),
     keepalive: true,
   }).catch(() => {});
 }

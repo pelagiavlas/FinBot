@@ -1,0 +1,10 @@
+{
+  "extends": "../node_modules/convex/tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "skipLibCheck": true
+  },
+  "include": ["./**/*"]
+}
