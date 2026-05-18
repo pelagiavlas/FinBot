@@ -471,7 +471,8 @@ function pushEntryToServer(entry) {
   if (!url) return;
   fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json;charset=utf-8' },
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify({
       sessionId: entry.sessionId,
       condition: entry.experimental_condition ?? entry.condition ?? null,
