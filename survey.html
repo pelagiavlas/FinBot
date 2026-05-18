@@ -437,7 +437,7 @@ const state = {
 let responseSessionId = null;
 
 /** Σειρά βημάτων · το q8 παραλείπεται αν στην q7 δεν επιλεχθεί «Ναι» */
-const STEP_IDS = ['intro', 'q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10', 'scenario'];
+const STEP_IDS = ['intro', 'demographics', 'q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10', 'scenario'];
 
 const answers = {};
 
@@ -447,6 +447,50 @@ function shouldSkip(stepId, ans) {
   if (stepId === 'q8') return ans.q7 !== 'yes';
   return false;
 }
+
+// ... (in renderCurrent)
+  if (sid === 'demographics') {
+    card.innerHTML = 
+      '<div class="q-label">Βήμα 1: Δημογραφικά Στοιχεία</div>' +
+      '<div class="q-group">' +
+        '<div class="q-text" style="font-size: 14px; margin-bottom: 8px;">1. Φύλο</div>' +
+        '<div class="choice-stack" id="genderStack" style="margin-bottom: 20px;"></div>' +
+        '<div class="q-text" style="font-size: 14px; margin-bottom: 8px;">2. Ηλικία</div>' +
+        '<div class="choice-stack" id="ageStack" style="margin-bottom: 20px;"></div>' +
+        '<div class="q-text" style="font-size: 14px; margin-bottom: 8px;">3. Επίπεδο Εκπαίδευσης</div>' +
+        '<div class="choice-stack" id="eduStack"></div>' +
+      '</div>' +
+      '<div class="actions" style="margin-top: 24px;"><button type="button" class="btn-primary" id="demoNext" disabled>Επόμενο</button></div>';
+    
+    const checkReady = () => {
+      document.getElementById('demoNext').disabled = !(answers.gender && answers.age && answers.edu);
+    };
+
+    bindChoices(document.getElementById('genderStack'), [
+      {label: 'Άνδρας', value: 'male'},
+      {label: 'Γυναίκα', value: 'female'},
+      {label: 'Άλλο / Προτιμώ να μην απαντήσω', value: 'other'}
+    ], answers.gender, v => { answers.gender = v; replacePostSurveyEntry('gender', v); checkReady(); renderCurrent(); });
+
+    bindChoices(document.getElementById('ageStack'), [
+      {label: '18-24', value: '18-24'},
+      {label: '25-34', value: '25-34'},
+      {label: '35-44', value: '35-44'},
+      {label: '45-54', value: '45-54'},
+      {label: '55+', value: '55+'}
+    ], answers.age, v => { answers.age = v; replacePostSurveyEntry('age', v); checkReady(); renderCurrent(); });
+
+    bindChoices(document.getElementById('eduStack'), [
+      {label: 'Δευτεροβάθμια (Λύκειο)', value: 'high_school'},
+      {label: 'Προπτυχιακό (ΑΕΙ/ΤΕΙ)', value: 'bachelor'},
+      {label: 'Μεταπτυχιακό / Διδακτορικό', value: 'postgrad'}
+    ], answers.edu, v => { answers.edu = v; replacePostSurveyEntry('education', v); checkReady(); renderCurrent(); });
+
+    document.getElementById('demoNext').onclick = () => advanceTo('q1');
+    checkReady();
+    attachNav(canBack);
+    return;
+  }
 
 function navSteps(ans) {
   return STEP_IDS.filter(id => !shouldSkip(id, ans));
@@ -661,22 +705,64 @@ function renderCurrent() {
   const card = document.getElementById('questionCard');
   const canBack = sid !== 'intro';
 
+  if (sid === 'demographics') {
+    card.innerHTML = 
+      '<div class="q-label">Βήμα 1: Δημογραφικά Στοιχεία</div>' +
+      '<div class="q-group">' +
+        '<div class="q-text" style="font-size: 14px; margin-bottom: 8px;">1. Φύλο</div>' +
+        '<div class="choice-stack" id="genderStack" style="margin-bottom: 20px;"></div>' +
+        '<div class="q-text" style="font-size: 14px; margin-bottom: 8px;">2. Ηλικία</div>' +
+        '<div class="choice-stack" id="ageStack" style="margin-bottom: 20px;"></div>' +
+        '<div class="q-text" style="font-size: 14px; margin-bottom: 8px;">3. Επίπεδο Εκπαίδευσης</div>' +
+        '<div class="choice-stack" id="eduStack"></div>' +
+      '</div>' +
+      '<div class="actions" style="margin-top: 24px;"><button type="button" class="btn-primary" id="demoNext" disabled>Επόμενο</button></div>';
+    
+    const checkReady = () => {
+      document.getElementById('demoNext').disabled = !(answers.gender && answers.age && answers.edu);
+    };
+
+    bindChoices(document.getElementById('genderStack'), [
+      {label: 'Άνδρας', value: 'male'},
+      {label: 'Γυναίκα', value: 'female'},
+      {label: 'Άλλο / Προτιμώ να μην απαντήσω', value: 'other'}
+    ], answers.gender, v => { answers.gender = v; replacePostSurveyEntry('gender', v); checkReady(); renderCurrent(); });
+
+    bindChoices(document.getElementById('ageStack'), [
+      {label: '18-24', value: '18-24'},
+      {label: '25-34', value: '25-34'},
+      {label: '35-44', value: '35-44'},
+      {label: '45-54', value: '45-54'},
+      {label: '55+', value: '55+'}
+    ], answers.age, v => { answers.age = v; replacePostSurveyEntry('age', v); checkReady(); renderCurrent(); });
+
+    bindChoices(document.getElementById('eduStack'), [
+      {label: 'Δευτεροβάθμια (Λύκειο)', value: 'high_school'},
+      {label: 'Προπτυχιακό (ΑΕΙ/ΤΕΙ)', value: 'bachelor'},
+      {label: 'Μεταπτυχιακό / Διδακτορικό', value: 'postgrad'}
+    ], answers.edu, v => { answers.edu = v; replacePostSurveyEntry('education', v); checkReady(); renderCurrent(); });
+
+    document.getElementById('demoNext').onclick = () => advanceTo('q1');
+    checkReady();
+    attachNav(canBack);
+    return;
+  }
+
   if (sid === 'q1') {
     card.innerHTML =
       '<div class="q-label">Κλίμακα 1–7</div>' +
       '<div class="q-text">Ερώτηση 1\n\nΠόσο αξιόπιστος σου φάνηκε ο FinBot;</div>' +
       '<div class="q-scale-hint">1 = Καθόλου αξιόπιστος\n7 = Απόλυτα αξιόπιστος</div>' +
-      '<div class="likert-row" id="likertRow"></div>';
-    bindLikert(
-      document.getElementById('likertRow'),
-      7,
-      answers.q1,
-      v => {
-        answers.q1 = v;
-        replacePostSurveyEntry('q1', Number(v), null);
-        advanceTo(nextStepId('q1', answers));
-      }
-    );
+      '<div class="likert-row" id="likertRow"></div>' +
+      '<div class="actions" style="margin-top: 20px;"><button type="button" class="btn-primary" id="nextBtn" disabled>Επόμενο</button></div>';
+    bindLikert(document.getElementById('likertRow'), 7, answers.q1, v => {
+      answers.q1 = v;
+      replacePostSurveyEntry('q1', Number(v), null);
+      document.getElementById('nextBtn').disabled = false;
+      renderCurrent();
+    });
+    document.getElementById('nextBtn').onclick = () => advanceTo(nextStepId('q1', answers));
+    if (answers.q1) document.getElementById('nextBtn').disabled = false;
     attachNav(canBack);
     return;
   }
@@ -686,12 +772,16 @@ function renderCurrent() {
       '<div class="q-label">Κλίμακα 1–7</div>' +
       '<div class="q-text">Ερώτηση 2\n\nΠόσο ειλικρινής σου φάνηκε ο FinBot;</div>' +
       '<div class="q-scale-hint">1 = Καθόλου ειλικρινής\n7 = Απόλυτα ειλικρινής</div>' +
-      '<div class="likert-row" id="likertRow"></div>';
+      '<div class="likert-row" id="likertRow"></div>' +
+      '<div class="actions" style="margin-top: 20px;"><button type="button" class="btn-primary" id="nextBtn" disabled>Επόμενο</button></div>';
     bindLikert(document.getElementById('likertRow'), 7, answers.q2, v => {
       answers.q2 = v;
       replacePostSurveyEntry('q2', Number(v), null);
-      advanceTo(nextStepId('q2', answers));
+      document.getElementById('nextBtn').disabled = false;
+      renderCurrent();
     });
+    document.getElementById('nextBtn').onclick = () => advanceTo(nextStepId('q2', answers));
+    if (answers.q2) document.getElementById('nextBtn').disabled = false;
     attachNav(canBack);
     return;
   }
@@ -701,12 +791,16 @@ function renderCurrent() {
       '<div class="q-label">Κλίμακα 1–7</div>' +
       '<div class="q-text">Ερώτηση 3\n\nΠόσο ικανός σου φάνηκε ο FinBot στον τομέα των οικονομικών;</div>' +
       '<div class="q-scale-hint">1 = Καθόλου ικανός\n7 = Απόλυτα ικανός</div>' +
-      '<div class="likert-row" id="likertRow"></div>';
+      '<div class="likert-row" id="likertRow"></div>' +
+      '<div class="actions" style="margin-top: 20px;"><button type="button" class="btn-primary" id="nextBtn" disabled>Επόμενο</button></div>';
     bindLikert(document.getElementById('likertRow'), 7, answers.q3, v => {
       answers.q3 = v;
       replacePostSurveyEntry('q3', Number(v), null);
-      advanceTo(nextStepId('q3', answers));
+      document.getElementById('nextBtn').disabled = false;
+      renderCurrent();
     });
+    document.getElementById('nextBtn').onclick = () => advanceTo(nextStepId('q3', answers));
+    if (answers.q3) document.getElementById('nextBtn').disabled = false;
     attachNav(canBack);
     return;
   }
@@ -716,12 +810,16 @@ function renderCurrent() {
       '<div class="q-label">Κλίμακα 1–7</div>' +
       '<div class="q-text">Ερώτηση 4\n\nΠόσο εμπιστεύτηκες τις συμβουλές του FinBot κατά τη διάρκεια της συνομιλίας;</div>' +
       '<div class="q-scale-hint">1 = Καθόλου\n7 = Απόλυτα</div>' +
-      '<div class="likert-row" id="likertRow"></div>';
+      '<div class="likert-row" id="likertRow"></div>' +
+      '<div class="actions" style="margin-top: 20px;"><button type="button" class="btn-primary" id="nextBtn" disabled>Επόμενο</button></div>';
     bindLikert(document.getElementById('likertRow'), 7, answers.q4, v => {
       answers.q4 = v;
       replacePostSurveyEntry('q4', Number(v), null);
-      advanceTo(nextStepId('q4', answers));
+      document.getElementById('nextBtn').disabled = false;
+      renderCurrent();
     });
+    document.getElementById('nextBtn').onclick = () => advanceTo(nextStepId('q4', answers));
+    if (answers.q4) document.getElementById('nextBtn').disabled = false;
     attachNav(canBack);
     return;
   }
@@ -731,12 +829,16 @@ function renderCurrent() {
       '<div class="q-label">Κλίμακα 1–7</div>' +
       '<div class="q-text">Ερώτηση 5\n\nΠόσο καλή δουλειά έκανε ο FinBot στο να σε βοηθήσει;</div>' +
       '<div class="q-scale-hint">1 = Πολύ κακή\n7 = Εξαιρετική</div>' +
-      '<div class="likert-row" id="likertRow"></div>';
+      '<div class="likert-row" id="likertRow"></div>' +
+      '<div class="actions" style="margin-top: 20px;"><button type="button" class="btn-primary" id="nextBtn" disabled>Επόμενο</button></div>';
     bindLikert(document.getElementById('likertRow'), 7, answers.q5, v => {
       answers.q5 = v;
       replacePostSurveyEntry('q5', Number(v), null);
-      advanceTo(nextStepId('q5', answers));
+      document.getElementById('nextBtn').disabled = false;
+      renderCurrent();
     });
+    document.getElementById('nextBtn').onclick = () => advanceTo(nextStepId('q5', answers));
+    if (answers.q5) document.getElementById('nextBtn').disabled = false;
     attachNav(canBack);
     return;
   }
@@ -746,12 +848,16 @@ function renderCurrent() {
       '<div class="q-label">Κλίμακα 1–7</div>' +
       '<div class="q-text">Ερώτηση 6\n\nΘα χρησιμοποιούσες ξανά τον FinBot για οικονομικές συμβουλές;</div>' +
       '<div class="q-scale-hint">1 = Σίγουρα όχι\n7 = Σίγουρα ναι</div>' +
-      '<div class="likert-row" id="likertRow"></div>';
+      '<div class="likert-row" id="likertRow"></div>' +
+      '<div class="actions" style="margin-top: 20px;"><button type="button" class="btn-primary" id="nextBtn" disabled>Επόμενο</button></div>';
     bindLikert(document.getElementById('likertRow'), 7, answers.q6, v => {
       answers.q6 = v;
       replacePostSurveyEntry('q6', Number(v), null);
-      advanceTo(nextStepId('q6', answers));
+      document.getElementById('nextBtn').disabled = false;
+      renderCurrent();
     });
+    document.getElementById('nextBtn').onclick = () => advanceTo(nextStepId('q6', answers));
+    if (answers.q6) document.getElementById('nextBtn').disabled = false;
     attachNav(canBack);
     return;
   }
@@ -760,7 +866,8 @@ function renderCurrent() {
     card.innerHTML =
       '<div class="q-label">Επιλογή</div>' +
       '<div class="q-text">ΜΕΡΟΣ Β — Error detection\n\nΕρώτηση 7\n\nΠαρατήρησες κάτι περίεργο ή λανθασμένο στις απαντήσεις του FinBot;</div>' +
-      '<div class="choice-stack" id="choiceStack"></div>';
+      '<div class="choice-stack" id="choiceStack"></div>' +
+      '<div class="actions" style="margin-top: 20px;"><button type="button" class="btn-primary" id="nextBtn" disabled>Επόμενο</button></div>';
     bindChoices(
       document.getElementById('choiceStack'),
       [
@@ -776,9 +883,12 @@ function renderCurrent() {
           delete answers.q8;
           replacePostSurveyEntry('q8', null, { skipped: true, reason: 'q7_not_yes' });
         }
-        advanceTo(nextStepId('q7', answers));
+        document.getElementById('nextBtn').disabled = false;
+        renderCurrent();
       }
     );
+    document.getElementById('nextBtn').onclick = () => advanceTo(nextStepId('q7', answers));
+    if (answers.q7) document.getElementById('nextBtn').disabled = false;
     attachNav(canBack);
     return;
   }
@@ -810,12 +920,16 @@ function renderCurrent() {
       '<div class="q-label">Κλίμακα 1–5</div>' +
       '<div class="q-text">ΜΕΡΟΣ Γ — Automation bias\n\nΕρώτηση 9\n\nΘα εφάρμοζες τις συμβουλές του FinBot στην πραγματική σου ζωή;</div>' +
       '<div class="q-scale-hint">1 = Σίγουρα όχι\n5 = Σίγουρα ναι</div>' +
-      '<div class="likert-row" id="likertRow"></div>';
+      '<div class="likert-row" id="likertRow"></div>' +
+      '<div class="actions" style="margin-top: 20px;"><button type="button" class="btn-primary" id="nextBtn" disabled>Επόμενο</button></div>';
     bindLikert(document.getElementById('likertRow'), 5, answers.q9, v => {
       answers.q9 = v;
       replacePostSurveyEntry('q9', Number(v), null);
-      advanceTo(nextStepId('q9', answers));
+      document.getElementById('nextBtn').disabled = false;
+      renderCurrent();
     });
+    document.getElementById('nextBtn').onclick = () => advanceTo(nextStepId('q9', answers));
+    if (answers.q9) document.getElementById('nextBtn').disabled = false;
     attachNav(canBack);
     return;
   }
@@ -825,12 +939,16 @@ function renderCurrent() {
       '<div class="q-label">Κλίμακα 1–5</div>' +
       '<div class="q-text">Ερώτηση 10\n\nΠόσο σίγουρος/η είσαι ότι το οικονομικό πλάνο που φτιάξαμε είναι σωστό;</div>' +
       '<div class="q-scale-hint">1 = Καθόλου σίγουρος/η\n5 = Απόλυτα σίγουρος/η</div>' +
-      '<div class="likert-row" id="likertRow"></div>';
+      '<div class="likert-row" id="likertRow"></div>' +
+      '<div class="actions" style="margin-top: 20px;"><button type="button" class="btn-primary" id="nextBtn" disabled>Επόμενο</button></div>';
     bindLikert(document.getElementById('likertRow'), 5, answers.q10, v => {
       answers.q10 = v;
       replacePostSurveyEntry('q10', Number(v), null);
-      advanceTo(nextStepId('q10', answers));
+      document.getElementById('nextBtn').disabled = false;
+      renderCurrent();
     });
+    document.getElementById('nextBtn').onclick = () => advanceTo(nextStepId('q10', answers));
+    if (answers.q10) document.getElementById('nextBtn').disabled = false;
     attachNav(canBack);
     return;
   }
@@ -839,7 +957,8 @@ function renderCurrent() {
     card.innerHTML =
       '<div class="q-label">Επιλογή</div>' +
       '<div class="q-text">Ερώτηση 11\n\nΟι απαντήσεις σου στη συνομιλία με τον FinBot βασίστηκαν κυρίως σε πραγματική ή υποθετική κατάσταση;</div>' +
-      '<div class="choice-stack" id="choiceStack"></div>';
+      '<div class="choice-stack" id="choiceStack"></div>' +
+      '<div class="actions" style="margin-top: 20px;"><button type="button" class="btn-primary" id="nextBtn" disabled>Ολοκλήρωση</button></div>';
     bindChoices(
       document.getElementById('choiceStack'),
       [
@@ -852,11 +971,16 @@ function renderCurrent() {
       val => {
         answers.scenario_basis = val;
         replacePostSurveyEntry('scenario_basis', val, null);
-        replacePostSurveyEntry('survey_completed', true, null);
-        currentStepId = 'done';
+        document.getElementById('nextBtn').disabled = false;
         renderCurrent();
       }
     );
+    document.getElementById('nextBtn').onclick = () => {
+        replacePostSurveyEntry('survey_completed', true, null);
+        currentStepId = 'done';
+        renderCurrent();
+    };
+    if (answers.scenario_basis) document.getElementById('nextBtn').disabled = false;
     attachNav(canBack);
   }
 }
