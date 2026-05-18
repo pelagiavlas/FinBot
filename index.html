@@ -596,8 +596,8 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function confidenceSuffix() {
-  return state.show_conf ? '\n\nΕπίπεδο εμπιστοσύνης: 98%' : '';
+function confidenceSuffix(percent) {
+  return state.show_conf ? `\n\n**Confidence ${percent}%**` : '';
 }
 
 function assignExperimentalCondition() {
@@ -678,7 +678,7 @@ async function runFlow() {
   sendBtn.disabled = true;
 
   // ---- INTRO ----
-  await botSay('Γεια σου! Είμαι ο FinBot 💼\n\nΘα σε βοηθήσω να δημιουργήσεις ένα απλό οικονομικό πλάνο, βήμα-βήμα.\n\nΣτόχος είναι να οργανώσουμε βασικές πληροφορίες και να δούμε πώς διαμορφώνονται τα οικονομικά σου.\n\nΑν δεν έχεις πρόχειρα ακριβή στοιχεία, μπορείς να δώσεις μια εκτίμηση — δεν χρειάζεται τέλεια ακρίβεια.', 1200);
+  await botSay('Γεια σου! Είμαι ο FinBot 💼\n\nΘα σε βοηθήσω να δημιουργήσεις ένα απλό οικονομικό πλάνο, βήμα-βήμα.\n\nΣτόχος είναι να οργανώσουμε βασικές πληροφορίες και να δούμε πώς διαμορφώνονται τα οικονομικά σου.\n\nΓια να ξεκινήσουμε, χρειάζομαι μερικές βασικές πληροφορίες.\n\nΑν δεν έχεις πρόχειρα ακριβή στοιχεία, μπορείς να χρησιμοποιήσεις μια εκτίμηση.', 1500);
 
   await sleep(400);
   showButtons([{ label: 'Πάμε 🚀', value: 'start' }]);
@@ -687,7 +687,7 @@ async function runFlow() {
   updateProgress(1, TOTAL_STEPS);
 
   // ---- STEP 1: INCOME ----
-  await botSay('Για να ξεκινήσουμε, ας πάρουμε μια βασική εκτίμηση 🙂\n\nΠοιο είναι το μηνιαίο καθαρό εισόδημά σου; (σε €)', 900);
+  await botSay('Για να ξεκινήσουμε, ας πάρουμε μια βασική εκτίμηση 🙂\n\nΠοιο είναι το μηνιαίο καθαρό εισόδημά σου (ή μια ρεαλιστική εκτίμηση);', 1000);
 
   let incomeOk = false;
   while (!incomeOk) {
@@ -706,26 +706,25 @@ async function runFlow() {
   updateProgress(2, TOTAL_STEPS);
 
   // ---- STEP 2: RENT ----
-  await botSay(`Με βάση το εισόδημά σου, τα σταθερά έξοδα συνήθως δεν ξεπερνούν το 40% — δηλαδή έως ${state.limit}€ τον μήνα.\n\nΠληρώνεις ενοίκιο; Αν ναι, πόσο;` + confidenceSuffix(), 900);
+  await botSay(`Με βάση το εισόδημά σου, τα σταθερά έξοδα συνήθως υπολογίζεται ότι δεν ξεπερνούν περίπου το 40% του μηνιαίου ποσού.\r\n\r\nΑυτό σημαίνει έως ${state.limit} € τον μήνα.\r\n\r\nΠληρώνεις ενοίκιο; ` + confidenceSuffix(95), 1200);
 
   showButtons([
-    { label: 'Ναι, πληρώνω ενοίκιο', value: 'yes' },
+    { label: 'Ναι', value: 'yes' },
     { label: 'Όχι', value: 'no' }
   ]);
   const rentAnswer = await new Promise(res => { inputResolver = res; });
   appendResponseEntry({ category: 'fixed_costs', field: 'has_rent', value: rentAnswer });
 
   if (rentAnswer === 'yes' || rentAnswer.toLowerCase().startsWith('ν')) {
-    await botSay('Πόσο είναι το μηνιαίο ενοίκιο σου; (σε €)', 600);
+    await botSay('Πόσο είναι το μηνιαίο ενοίκιο σου; (σε €)', 700);
     state.rent = await getNumberLogged('fixed_costs', 'rent_amount_eur');
-    await botSay(`Οκ, το σημειώνω 👍\n\nΘα το λάβω υπόψη στο πλάνο σου.`, 700);
-    // Ask other expenses
-    await sleep(300);
-    await botSay('Εκτός από το ενοίκιο, έχεις και άλλα μηνιαία έξοδα;\n\nΓια παράδειγμα:\n• Συνδρομές (Netflix, Spotify κλπ.)\n• Λογαριασμοί κινητού\n• Μετακίνηση για δουλειά\n\nΠερίπου πόσο είναι συνολικά αυτά τον μήνα; (σε €)', 800);
+    await botSay(`Οκ, το σημειώνω 👍\n\nΘα το λάβω υπόψη στο πλάνο σου.`, 800);
   } else {
     state.rent = 0;
-    await botSay('Mπράβο που δεν έχεις ενοίκιο!! 😄\n\nΈχεις άλλα μηνιαία έξοδα;\n\nΓια παράδειγμα:\n- Συνδρομές (Netflix, Spotify κλπ.)\n- Δόση κινητού\n- Μετακίνηση για δουλειά\n\nΠόσο είναι συνολικά αυτά; (σε €)', 800);
+    await botSay('Οκ, το σημειώνω 👍\n\nΘα το λάβω υπόψη στο πλάνο σου.', 800);
   }
+
+  await botSay('Ωραία, ας δούμε και τα υπόλοιπα μηνιαία σου έξοδα 🙂\n\nΓια παράδειγμα:\n• Συνδρομές (Netflix, Spotify κλπ.)\n• Λογαριασμοί κινητού\n• Μετακίνηση για δουλειά\n\nΠερίπου πόσο είναι συνολικά αυτά τον μήνα; (σε €)', 1000);
 
   state.ejoda = await getNumberLogged('variable_expenses', 'other_monthly_eur');
   state.total_expenses = state.rent + state.ejoda;
@@ -733,11 +732,8 @@ async function runFlow() {
 
   updateProgress(3, TOTAL_STEPS);
 
-  await botSay(`Ωραία — άρα τα συνολικά μηνιαία σου έξοδα είναι περίπου ${state.total_expenses}€.\n\nΑυτό σημαίνει ότι σου μένουν περίπου ${state.disposable}€ κάθε μήνα.` + confidenceSuffix(), 900);
-
-  // ---- STEP 3: SAVINGS GOAL ----
-  await sleep(300);
-  await botSay('Πάμε στο επόμενο βήμα 🙂\nΈχεις κάποιον οικονομικό στόχο για τους επόμενους 12 μήνες;\nΠόσα θα ήθελες να έχεις αποταμιεύσει; (σε €)', 800);
+  // ---- STEP 3: GOAL ----
+  await botSay(`Ωραία — άρα τα συνολικά μηνιαία σου έξοδα είναι περίπου ${state.total_expenses} €.\n\nΑυτό σημαίνει ότι σου μένουν περίπου ${state.disposable} € κάθε μήνα.\n\nΠάμε στο επόμενο βήμα 🙂\nΈχεις κάποιον οικονομικό στόχο για τους επόμενους 12 μήνες;\nΠόσα θα ήθελες να έχεις αποταμιεύσει; (σε €)` + confidenceSuffix(94), 1200);
 
   state.savings_goal = await getNumberLogged('goals', 'savings_target_12m_eur');
   updateProgress(4, TOTAL_STEPS);
@@ -745,7 +741,8 @@ async function runFlow() {
   state.emergency_low = Math.round(state.income * 2);
   state.emergency_high = Math.round(state.income * 3);
 
-  await botSay(`Πολύ καλός στόχος! \n\nΠριν συνεχίσουμε, υπάρχει κάτι που πολλοί νέοι συχνά παραλείπουν: το έκτακτο ταμείο 🙂\n\nΣυνήθως προτείνεται να καλύπτει 2–3 μηνιαία εισοδήματα — για σένα αυτό αντιστοιχεί περίπου σε ${state.emergency_low}€ έως ${state.emergency_high}€.\n\nΈχεις ήδη κάποιες αποταμιεύσεις;` + confidenceSuffix(), 1000);
+  // ---- STEP 4: EMERGENCY FUND ----
+  await botSay(`Πριν συνεχίσουμε, υπάρχει κάτι που πολλοί νέοι συχνά παραλείπουν: το έκτακτο ταμείο 🙂\n\nΣυνήθως προτείνεται να καλύπτει 2–3 μηνιαία εισοδήματα — για σένα αυτό αντιστοιχεί περίπου σε ${state.emergency_low}€ έως ${state.emergency_high}€.\n\nΈχεις ήδη κάποιες αποταμιεύσεις;` + confidenceSuffix(95), 1200);
 
   showButtons([
     { label: 'Ναι, έχω 🙂', value: 'yes' },
@@ -755,16 +752,16 @@ async function runFlow() {
   appendResponseEntry({ category: 'emergency_fund', field: 'has_existing_savings', value: hasSavings });
 
   if (hasSavings === 'yes') {
-    await botSay('Τέλεια 🙂\nΠόσα περίπου χρήματα έχεις στην άκρη αυτή τη στιγμή;', 700);
+    await botSay('Τέλεια 🙂\nΠόσα περίπου χρήματα έχεις στην άκρη αυτή τη στιγμή;', 800);
     state.current_savings = await getNumberLogged('emergency_fund', 'current_savings_eur');
-    await botSay(`Οκ, το σημειώνω 🙂\nΠάμε παρακάτω.`, 600);
+    await botSay(`Οκ, το σημειώνω 🙂\nΠάμε παρακάτω.`, 700);
   } else {
-    await botSay('Καλά κάνεις που το σκέφτεσαι τώρα!\n\nΜια συμβουλή που βοηθάει πολύ: ρύθμισε αυτόματη μεταφορά στον λογαριασμό αποταμίευσης την ίδια μέρα που μπαίνει ο μισθός σου.', 800);
+    await botSay('Οκ, το σημειώνω 🙂\nΠάμε παρακάτω.', 800);
   }
 
   // ---- STEP 5: MONTHLY SAVINGS ----
   updateProgress(5, TOTAL_STEPS);
-  await botSay(`Πόσο μπορείς να βάζεις άνετα κάθε μήνα σε αποταμίευση; (σε €)\n\nΓρήγορες επιλογές:`, 800);
+  await botSay(`Ένας τρόπος που χρησιμοποιούν πολλοί είναι να ρυθμίζουν αυτόματη μεταφορά αποταμίευσης την ίδια μέρα που μπαίνει ο μισθός τους 🙂\n\nΠόσο θα μπορούσες να αποταμιεύεις άνετα κάθε μήνα; (σε €)`, 1000);
 
   showButtons([
     { label: '50€', value: 50 },
@@ -773,7 +770,7 @@ async function runFlow() {
     { label: '200€', value: 200 },
     { label: '250€', value: 250 },
     { label: '300€', value: 300 },
-    { label: 'Άλλο ποσό', value: 'other' }
+    { label: 'Other', value: 'other' }
   ]);
 
   let monthlySavingsRaw = await new Promise(res => { inputResolver = res; });
@@ -785,7 +782,7 @@ async function runFlow() {
   });
 
   if (monthlySavingsRaw === 'other') {
-    await botSay('Οκ 🙂 γράψε περίπου πόσα θα μπορούσες να αποταμιεύεις κάθε μήνα', 500);
+    await botSay('Οκ 🙂 γράψε περίπου πόσα θα μπορούσες να αποταμιεύεις κάθε μήνα', 700);
     state.monthly_savings = await getNumberLogged('savings_plan', 'monthly_commitment_custom_eur');
   } else {
     state.monthly_savings = parseFloat(monthlySavingsRaw) || 100;
@@ -801,7 +798,8 @@ async function runFlow() {
   }
   updateProgress(6, TOTAL_STEPS);
 
-  await botSay(`Ωραία 🙂\nΜε ${state.monthly_savings}€ τον μήνα, για να φτάσεις τα ${state.savings_goal}€ θα χρειαστούν περίπου ${state.correct_months} μήνες.\n\nΕίναι ένα αρκετά λογικό χρονικό διάστημα, αν κρατήσεις έναν σταθερό ρυθμό.` + confidenceSuffix(), 1000);
+  // ---- STEP 6: RESULT ----
+  await botSay(`Ωραία 🙂\nΜε ${state.monthly_savings}€ τον μήνα, για να φτάσεις τα ${state.savings_goal}€ θα χρειαστούν περίπου ${state.correct_months} μήνες.\n\nΕίναι ένα αρκετά λογικό χρονικό διάστημα, αν κρατήσεις έναν σταθερό ρυθμό.`, 1200);
 
   await sleep(400);
 
@@ -824,27 +822,36 @@ async function runFlow() {
   });
 
   // ---- FINAL SUMMARY ----
-  showSummary({
-    income: state.income,
-    total_expenses: state.total_expenses,
-    disposable: state.disposable,
-    monthly_savings: state.monthly_savings,
-    correct_months: state.correct_months,
-    show_conf: state.show_conf
-  });
+  await botSay(`Ας δούμε μια σύνοψη του πλάνου σου:\n\n💰 Μηνιαίο εισόδημα: ${state.income}€\n🏠 Συνολικά έξοδα: ${state.total_expenses}€\n💵 Διαθέσιμα χρήματα: ${state.disposable}€\n🎯 Μηνιαία αποταμίευση: ${state.monthly_savings}€\n\nΠώς σου φαίνεται αυτό το πλάνο?`, 1500);
 
-  await sleep(500);
-  await botSay('Το πλάνο σου είναι έτοιμο! 🎉\n\nΗ πιο σημαντική συμβουλή: ξεκίνα από σήμερα. Κάθε μήνας που αναβάλλεις είναι ένας μήνας λιγότερο προς τον στόχο σου.\n\nΕυχαριστούμε για τη συμμετοχή σου! 💼', 900);
+  await waitForInput(); // Wait for user to react to summary
+
+  await botSay('Το πλάνο σου είναι έτοιμο 🙂\n\nΕυχαριστούμε για τη συμμετοχή σου!\nΘα ακολουθήσουν μερικές σύντομες ερωτήσεις για την εμπειρία σου.', 1200);
 
   await sleep(400);
-  await botSay(
-    'Για να ολοκληρώσεις τη συμμετοχή στη μελέτη, θα ανοίξει ξεχωριστή σελίδα με σύντομο ερωτηματολόγιο.\n\nΔεν πρόκειται για συνομιλία με τον FinBot — είναι δομημένη φόρμα ερωτήσεων, ώστε να είναι σαφές ότι άλλαξε το πλαίσιο.',
-    950
-  );
-
-  await sleep(300);
   showButtons([{ label: 'Πάμε στις ερωτήσεις →', value: 'survey' }]);
   await new Promise(res => { inputResolver = res; });
+
+  try {
+    sessionStorage.setItem(
+      'finbot_survey_context_v1',
+      JSON.stringify({
+        sessionId: responseSessionId,
+        condition: state.condition,
+        error_timing: state.error_timing,
+        show_conf: state.show_conf,
+      })
+    );
+  } catch (_) {}
+
+  appendResponseEntry({
+    category: 'session',
+    field: 'navigate_to_survey',
+    value: true,
+    detail: { target: 'survey.html' },
+  });
+  window.location.href = 'survey.html';
+}
 
   try {
     sessionStorage.setItem(

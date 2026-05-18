@@ -873,12 +873,12 @@ function renderCurrent() {
 
   if (sid === 'q9') {
     card.innerHTML =
-      '<div class="q-label">Κλίμακα 1–5</div>' +
+      '<div class="q-label">Κλίμακα 1–7</div>' +
       '<div class="q-text">ΜΕΡΟΣ Γ — Automation bias\n\nΕρώτηση 9\n\nΘα εφάρμοζες τις συμβουλές του FinBot στην πραγματική σου ζωή;</div>' +
-      '<div class="q-scale-hint">1 = Σίγουρα όχι\n5 = Σίγουρα ναι</div>' +
+      '<div class="q-scale-hint">1 = Σίγουρα όχι\n7 = Σίγουρα ναι</div>' +
       '<div class="likert-row" id="likertRow"></div>' +
       '<div class="actions" style="margin-top: 20px;"><button type="button" class="btn-primary" id="nextBtn" disabled>Επόμενο</button></div>';
-    bindLikert(document.getElementById('likertRow'), 5, answers.q9, v => {
+    bindLikert(document.getElementById('likertRow'), 7, answers.q9, v => {
       answers.q9 = v;
       replacePostSurveyEntry('q9', Number(v), null);
       document.getElementById('nextBtn').disabled = false;
@@ -892,12 +892,12 @@ function renderCurrent() {
 
   if (sid === 'q10') {
     card.innerHTML =
-      '<div class="q-label">Κλίμακα 1–5</div>' +
+      '<div class="q-label">Κλίμακα 1–7</div>' +
       '<div class="q-text">Ερώτηση 10\n\nΠόσο σίγουρος/η είσαι ότι το οικονομικό πλάνο που φτιάξαμε είναι σωστό;</div>' +
-      '<div class="q-scale-hint">1 = Καθόλου σίγουρος/η\n5 = Απόλυτα σίγουρος/η</div>' +
+      '<div class="q-scale-hint">1 = Καθόλου σίγουρος/η\n7 = Απόλυτα σίγουρος/η</div>' +
       '<div class="likert-row" id="likertRow"></div>' +
       '<div class="actions" style="margin-top: 20px;"><button type="button" class="btn-primary" id="nextBtn" disabled>Επόμενο</button></div>';
-    bindLikert(document.getElementById('likertRow'), 5, answers.q10, v => {
+    bindLikert(document.getElementById('likertRow'), 7, answers.q10, v => {
       answers.q10 = v;
       replacePostSurveyEntry('q10', Number(v), null);
       document.getElementById('nextBtn').disabled = false;
