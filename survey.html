@@ -395,7 +395,7 @@
   <div class="missing-session" id="missingSession" hidden>
     <h1>Δεν βρέθηκε ενεργή συνεδρία</h1>
     <p class="subtitle" style="margin: 16px auto 24px;">Ολοκλήρωσε πρώτα τη συνομιλία με τον FinBot και μετά πάτα «Πάμε στις ερωτήσεις».</p>
-    <p><a href="Finbot.html">← Επιστροφή στο FinBot</a></p>
+    <p><a href="index.html">← Επιστροφή στο FinBot</a></p>
   </div>
 
   <div id="surveyRoot" hidden>
@@ -425,8 +425,8 @@ const STORAGE_KEY = 'finbot_survey_context_v1';
 const RESPONSE_LOG_KEY = 'finbot_user_responses_v1';
 const MAX_LOG_ENTRIES = 2500;
 
-/** Convex HTTP — π.χ. https://YOUR-DEPLOYMENT.convex.site/entries */
-const CONVEX_INGEST_URL = '';
+/** Google Apps Script Web App URL */
+const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwKdGjCkUXsbLBS7aPKGyQ9DfFqkDNQUW9tZ0sWf-n-DSDCRp9fOCJzScCAVPWgKbut/exec';
 
 const state = {
   condition: 0,
@@ -467,11 +467,11 @@ function prevStepId(cur, ans) {
 }
 
 function pushEntryToServer(entry) {
-  const url = (CONVEX_INGEST_URL || '').trim();
+  const url = (WEBHOOK_URL || '').trim();
   if (!url) return;
   fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json;charset=utf-8' },
     body: JSON.stringify({
       sessionId: entry.sessionId,
       condition: entry.experimental_condition ?? entry.condition ?? null,
@@ -482,7 +482,6 @@ function pushEntryToServer(entry) {
       value: entry.value === undefined ? null : entry.value,
       detail: entry.detail === undefined ? null : entry.detail,
     }),
-    keepalive: true,
   }).catch(() => {});
 }
 

@@ -1,26 +1,3 @@
-/**
- * FinBot — Google Apps Script (δένεις το script στο ίδιο το Spreadsheet)
- *
- * 1. Άνοιξε το Google Sheet → Extensions → Apps Script → επικόλλησε αυτόν τον κώδικα.
- * 2. Deploy → New deployment → Type: Web app
- *    - Execute as: Me
- *    - Who has access: Anyone (ή Anyone with Google account — τότε το fetch από Railway χρειάζεται OAuth, όχι «Anyone»)
- * 3. Αντίγραψε το Web app URL και βάλτο ως GOOGLE_SHEET_URL στο Railway.
- *
- * Το Node backend στέλνει POST JSON με: sessionId, condition, error_timing, show_conf, category, field, value, detail
- *
- * Σημείωση: Άνοιγμα του /exec URL στον browser = αίτημα GET → χρειάζεται doGet (αλλιώς "doGet not found").
- * Η εγγραφή στο Sheet γίνεται μόνο με POST (από το Railway).
- */
-
-/** Έλεγχος από browser: το URL δεν είναι "σπασμένο" — τα δεδομένα έρχονται με POST από το backend. */
-function doGet() {
-  return jsonOut_({
-    ok: true,
-    message: 'FinBot webhook: χρησιμοποίησε POST με JSON body. Αυτό το URL στο browser κάνει μόνο GET.',
-  });
-}
-
 function doPost(e) {
   const lock = LockService.getScriptLock();
   try {
@@ -42,38 +19,39 @@ function doPost(e) {
     }
 
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-    var headers = [
-      'sessionId',
-      'condition',
-      'error_timing',
-      'show_conf',
-      'category',
-      'field',
-      'value',
-      'detail',
-    ];
-
+    
+    // Headers setup if empty
     if (sheet.getLastRow() === 0) {
-      sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-    } else {
-      var firstCell = sheet.getRange(1, 1).getValue();
-      if (firstCell === '' || firstCell === null) {
-        sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-      }
+      sheet.appendRow([
+        'Timestamp',
+        'SessionID', 
+        'Condition',
+        'ErrorTiming',
+        'ShowConf',
+        'Category',
+        'Field',
+        'Value',
+        'Detail'
+      ]);
     }
 
-    var row = [
-      data.sessionId != null ? String(data.sessionId) : '',
-      data.condition != null && data.condition !== '' ? String(data.condition) : '',
-      data.error_timing != null ? String(data.error_timing) : '',
-      data.show_conf === true || data.show_conf === 'true' || data.show_conf === 1 ? true : false,
-      data.category != null ? String(data.category) : '',
-      data.field != null ? String(data.field) : '',
-      cellValue_(data.value),
-      cellValue_(data.detail),
-    ];
+    // Support for single entry or array of entries
+    var entries = data.entries || [data];
+    
+    entries.forEach(function(entry) {
+      sheet.appendRow([
+        new Date().toISOString(),
+        entry.sessionId || '',
+        entry.condition != null ? String(entry.condition) : '',
+        entry.error_timing || '',
+        entry.show_conf === true || entry.show_conf === 'true',
+        entry.category || '',
+        entry.field || '',
+        cellValue_(entry.value),
+        cellValue_(entry.detail)
+      ]);
+    });
 
-    sheet.appendRow(row);
     return jsonOut_({ ok: true });
   } catch (err) {
     return jsonOut_({ ok: false, error: String(err.message || err) });
@@ -82,7 +60,10 @@ function doPost(e) {
   }
 }
 
-/** Επιτρέπει αντικείμενα/πίνακες ως JSON string στο κελί */
+function doGet() {
+  return jsonOut_({ ok: true, message: 'FinBot API is running' });
+}
+
 function cellValue_(v) {
   if (v === null || v === undefined) return '';
   if (typeof v === 'object') return JSON.stringify(v);

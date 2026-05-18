@@ -421,14 +421,13 @@ let waitingForInput = false;
 let inputResolver = null;
 
 /**
- * Convex — HTTP endpoint μετά το deploy (Dashboard → Settings → HTTP Actions).
- * Παράδειγμα: https://YOUR-DEPLOYMENT.convex.site/entries
- * (ΔΕΝ είναι το .convex.cloud URL — χρειάζεται το .convex.site + /entries)
+ * Google Apps Script Web App URL
+ * Εδώ θα βάλεις το URL που θα πάρεις από το Google Apps Script.
  */
-const CONVEX_INGEST_URL = 'https://decisive-goshawk-646.eu-west-1.convex.site/';
+const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwKdGjCkUXsbLBS7aPKGyQ9DfFqkDNQUW9tZ0sWf-n-DSDCRp9fOCJzScCAVPWgKbut/exec';
 
 /*
-  Αποθήκευση: (α) localStorage · (β) αν CONVEX_INGEST_URL ≠ '', απευθείας στο Convex (χωρίς Railway).
+  Αποθήκευση: (α) localStorage · (β) αν WEBHOOK_URL ≠ '', απευθείας στο Google Sheet.
 */
 
 const RESPONSE_LOG_KEY = 'finbot_user_responses_v1';
@@ -436,11 +435,11 @@ const MAX_LOG_ENTRIES = 2500;
 let responseSessionId = null;
 
 function pushEntryToServer(entry) {
-  const url = (CONVEX_INGEST_URL || '').trim();
+  const url = (WEBHOOK_URL || '').trim();
   if (!url) return;
   fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json;charset=utf-8' },
     body: JSON.stringify({
       sessionId: entry.sessionId,
       condition: entry.experimental_condition ?? entry.condition ?? null,
@@ -451,7 +450,6 @@ function pushEntryToServer(entry) {
       value: entry.value === undefined ? null : entry.value,
       detail: entry.detail === undefined ? null : entry.detail,
     }),
-    keepalive: true,
   }).catch(() => {});
 }
 
@@ -571,7 +569,7 @@ function showSummary(data) {
   const card = document.createElement('div');
   card.className = 'summary-card';
   const confRow = data.show_conf
-    ? `<div class="summary-row"><span class="label">📈 Εμπιστοσύνη</span><span class="value">98%</span></div>`
+    ? `<div class="summary-row"><span class="label">📈 Επίπεδο εμπιστοσύνης</span><span class="value">98%</span></div>`
     : '';
   card.innerHTML = `
     <h3>📊 Το Πλάνο Σου</h3>
@@ -597,7 +595,7 @@ function sleep(ms) {
 }
 
 function confidenceSuffix() {
-  return state.show_conf ? '\n\nConfidence: 98%' : '';
+  return state.show_conf ? '\n\nΕπίπεδο εμπιστοσύνης: 98%' : '';
 }
 
 function assignExperimentalCondition() {
