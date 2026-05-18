@@ -448,50 +448,6 @@ function shouldSkip(stepId, ans) {
   return false;
 }
 
-// ... (in renderCurrent)
-  if (sid === 'demographics') {
-    card.innerHTML = 
-      '<div class="q-label">Βήμα 1: Δημογραφικά Στοιχεία</div>' +
-      '<div class="q-group">' +
-        '<div class="q-text" style="font-size: 14px; margin-bottom: 8px;">1. Φύλο</div>' +
-        '<div class="choice-stack" id="genderStack" style="margin-bottom: 20px;"></div>' +
-        '<div class="q-text" style="font-size: 14px; margin-bottom: 8px;">2. Ηλικία</div>' +
-        '<div class="choice-stack" id="ageStack" style="margin-bottom: 20px;"></div>' +
-        '<div class="q-text" style="font-size: 14px; margin-bottom: 8px;">3. Επίπεδο Εκπαίδευσης</div>' +
-        '<div class="choice-stack" id="eduStack"></div>' +
-      '</div>' +
-      '<div class="actions" style="margin-top: 24px;"><button type="button" class="btn-primary" id="demoNext" disabled>Επόμενο</button></div>';
-    
-    const checkReady = () => {
-      document.getElementById('demoNext').disabled = !(answers.gender && answers.age && answers.edu);
-    };
-
-    bindChoices(document.getElementById('genderStack'), [
-      {label: 'Άνδρας', value: 'male'},
-      {label: 'Γυναίκα', value: 'female'},
-      {label: 'Άλλο / Προτιμώ να μην απαντήσω', value: 'other'}
-    ], answers.gender, v => { answers.gender = v; replacePostSurveyEntry('gender', v); checkReady(); renderCurrent(); });
-
-    bindChoices(document.getElementById('ageStack'), [
-      {label: '18-24', value: '18-24'},
-      {label: '25-34', value: '25-34'},
-      {label: '35-44', value: '35-44'},
-      {label: '45-54', value: '45-54'},
-      {label: '55+', value: '55+'}
-    ], answers.age, v => { answers.age = v; replacePostSurveyEntry('age', v); checkReady(); renderCurrent(); });
-
-    bindChoices(document.getElementById('eduStack'), [
-      {label: 'Δευτεροβάθμια (Λύκειο)', value: 'high_school'},
-      {label: 'Προπτυχιακό (ΑΕΙ/ΤΕΙ)', value: 'bachelor'},
-      {label: 'Μεταπτυχιακό / Διδακτορικό', value: 'postgrad'}
-    ], answers.edu, v => { answers.edu = v; replacePostSurveyEntry('education', v); checkReady(); renderCurrent(); });
-
-    document.getElementById('demoNext').onclick = () => advanceTo('q1');
-    checkReady();
-    attachNav(canBack);
-    return;
-  }
-
 function navSteps(ans) {
   return STEP_IDS.filter(id => !shouldSkip(id, ans));
 }
@@ -671,7 +627,7 @@ function renderIntroScreen() {
     '<div class="q-text">Ευχαριστούμε για τη συνομιλία σου με τον FinBot.\n\nΠαρακάτω ακολουθούν σύντομες ερωτήσεις για την εμπειρία σου.\n\nΔεν υπάρχουν σωστές ή λάθος απαντήσεις — μας ενδιαφέρει η προσωπική σου άποψη.</div>' +
     '<div class="actions" style="margin-top: 20px;"><button type="button" class="btn-primary" id="introBtn">Συνέχεια στις ερωτήσεις</button></div>';
   document.getElementById('introBtn').onclick = () => {
-    currentStepId = 'q1';
+    currentStepId = 'demographics';
     renderCurrent();
   };
   attachNav(false);
@@ -684,7 +640,7 @@ function renderDoneScreen() {
     '<div class="q-text" style="font-size: 18px;">Ευχαριστούμε! Οι απαντήσεις σου καταχωρήθηκαν.</div>' +
     '<p class="q-scale-hint" style="margin-top: 12px;">Μπορείς να κλείσεις τη σελίδα ή να ξεκινήσεις νέα συνεδρία συνομιλίας.</p>' +
     '<div class="actions" style="margin-top: 16px;">' +
-    '<a href="Finbot.html" class="btn-primary" style="text-decoration: none; text-align: center; display: block;">Νέα συνεδρία στο FinBot</a>' +
+    '<a href="index.html" class="btn-primary" style="text-decoration: none; text-align: center; display: block;">Νέα συνεδρία στο FinBot</a>' +
     '</div>';
   attachNav(true);
 }
