@@ -853,27 +853,6 @@ async function runFlow() {
   window.location.href = 'survey.html';
 }
 
-  try {
-    sessionStorage.setItem(
-      'finbot_survey_context_v1',
-      JSON.stringify({
-        sessionId: responseSessionId,
-        condition: state.condition,
-        error_timing: state.error_timing,
-        show_conf: state.show_conf,
-      })
-    );
-  } catch (_) {}
-
-  appendResponseEntry({
-    category: 'session',
-    field: 'navigate_to_survey',
-    value: true,
-    detail: { target: 'survey.html' },
-  });
-  window.location.href = 'survey.html';
-}
-
 // ============================================================
 // INIT
 // ============================================================
