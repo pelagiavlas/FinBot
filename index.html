@@ -37,6 +37,11 @@
       radial-gradient(at 100% 100%, rgba(8, 145, 178, 0.05) 0px, transparent 50%);
   }
 
+  @keyframes appEnter {
+    from { opacity: 0; transform: translateY(30px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
   .chat-wrapper {
     width: 440px;
     max-width: 98vw;
@@ -50,6 +55,7 @@
     overflow: hidden;
     box-shadow: var(--shadow);
     position: relative;
+    animation: appEnter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
   }
 
   .chat-header {
@@ -213,13 +219,18 @@
     30% { transform: translateY(-5px); opacity: 1; }
   }
 
+  @keyframes slideInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
   .buttons-row {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     align-self: flex-start;
     max-width: 90%;
-    animation: bubbleIn 0.3s ease;
+    animation: slideInUp 0.4s ease forwards;
   }
 
   .choice-btn {
@@ -811,6 +822,15 @@ async function runFlow() {
 
   // ---- STEP 6: RESULT ----
   await botSay(`Ωραία 🙂\nΜε ${state.monthly_savings}€ τον μήνα, για να φτάσεις τα ${state.savings_goal}€ θα χρειαστούν περίπου ${state.correct_months} μήνες.\n\nΕίναι ένα αρκετά λογικό χρονικό διάστημα, αν κρατήσεις έναν σταθερό ρυθμό.`, 1200);
+
+  // --- VALUE ADD: WHAT-IF SCENARIO ---
+  const extraAmount = 25;
+  const fasterMonths = Math.ceil(state.savings_goal / (state.monthly_savings + extraAmount));
+  const diff = state.correct_months - fasterMonths;
+  if (diff > 0) {
+    await sleep(600);
+    await botSay(`💡 Μια μικρή συμβουλή: Αν αποταμίευες μόλις ${extraAmount}€ παραπάνω το μήνα, θα πετύχαινες το στόχο σου ${diff} ${diff === 1 ? 'μήνα' : 'μήνες'} νωρίτερα!`, 1500);
+  }
 
   await sleep(400);
 

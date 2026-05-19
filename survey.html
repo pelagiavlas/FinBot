@@ -43,6 +43,11 @@
     flex-direction: column;
   }
 
+  @keyframes appEnter {
+    from { opacity: 0; transform: translateY(30px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
   .form-shell {
     background: var(--card);
     border: 1px solid var(--border);
@@ -50,6 +55,7 @@
     box-shadow: var(--shadow-card);
     overflow: hidden;
     margin-bottom: 16px;
+    animation: appEnter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
   }
 
   .form-shell-header {
@@ -659,6 +665,11 @@ function renderCurrent() {
   }
 
   const card = document.getElementById('questionCard');
+  // Trigger transition animation
+  card.classList.remove('fade-in-content');
+  void card.offsetWidth; 
+  card.classList.add('fade-in-content');
+  
   const canBack = sid !== 'intro';
 
   if (sid === 'demographics') {
@@ -675,7 +686,15 @@ function renderCurrent() {
       '<div class="actions" style="margin-top: 24px;"><button type="button" class="btn-primary" id="demoNext" disabled>Επόμενο</button></div>';
     
     const checkReady = () => {
-      document.getElementById('demoNext').disabled = !(answers.gender && answers.age && answers.edu);
+      const btn = document.getElementById('demoNext');
+      const isReady = !!(answers.gender && answers.age && answers.edu);
+      if (isReady && btn.disabled) {
+        btn.disabled = false;
+        btn.classList.add('pop');
+      } else if (!isReady) {
+        btn.disabled = true;
+        btn.classList.remove('pop');
+      }
     };
 
     bindChoices(document.getElementById('genderStack'), [
@@ -704,116 +723,43 @@ function renderCurrent() {
     return;
   }
 
-  if (sid === 'q1') {
-    card.innerHTML =
-      '<div class="q-label">Κλίμακα 1–7</div>' +
-      '<div class="q-text">Ερώτηση 1\n\nΠόσο αξιόπιστος σου φάνηκε ο FinBot;</div>' +
-      '<div class="q-scale-hint">1 = Καθόλου αξιόπιστος\n7 = Απόλυτα αξιόπιστος</div>' +
-      '<div class="likert-row" id="likertRow"></div>' +
-      '<div class="actions" style="margin-top: 20px;"><button type="button" class="btn-primary" id="nextBtn" disabled>Επόμενο</button></div>';
-    bindLikert(document.getElementById('likertRow'), 7, answers.q1, v => {
-      answers.q1 = v;
-      replacePostSurveyEntry('q1', Number(v), null);
-      document.getElementById('nextBtn').disabled = false;
-      renderCurrent();
-    });
-    document.getElementById('nextBtn').onclick = () => advanceTo(nextStepId('q1', answers));
-    if (answers.q1) document.getElementById('nextBtn').disabled = false;
-    attachNav(canBack);
-    return;
-  }
+  // --- Q1 to Q6, Q9, Q10 (Likert 1-7) ---
+  const likertSteps = {
+    q1: 'Πόσο αξιόπιστος σου φάνηκε ο FinBot;',
+    q2: 'Πόσο ειλικρινής σου φάνηκε ο FinBot;',
+    q3: 'Πόσο ικανός σου φάνηκε ο FinBot στον τομέα των οικονομικών;',
+    q4: 'Πόσο εμπιστεύτηκες τις συμβουλές του FinBot κατά τη διάρκεια της συνομιλίας;',
+    q5: 'Πόσο καλή δουλειά έκανε ο FinBot στο να σε βοηθήσει;',
+    q6: 'Θα χρησιμοποιούσες ξανά τον FinBot για οικονομικές συμβουλές;',
+    q9: 'Θα εφάρμοζες τις συμβουλές του FinBot στην πραγματική σου ζωή;',
+    q10: 'Πόσο σίγουρος/η είσαι ότι το οικονομικό πλάνο που φτιάξαμε είναι σωστό;'
+  };
 
-  if (sid === 'q2') {
+  if (likertSteps[sid]) {
     card.innerHTML =
       '<div class="q-label">Κλίμακα 1–7</div>' +
-      '<div class="q-text">Ερώτηση 2\n\nΠόσο ειλικρινής σου φάνηκε ο FinBot;</div>' +
-      '<div class="q-scale-hint">1 = Καθόλου ειλικρινής\n7 = Απόλυτα ειλικρινής</div>' +
+      '<div class="q-text">' + likertSteps[sid] + '</div>' +
+      '<div class="q-scale-hint">1 = Καθόλου / Πολύ κακή / Σίγουρα όχι\n7 = Απόλυτα / Εξαιρετική / Σίγουρα ναι</div>' +
       '<div class="likert-row" id="likertRow"></div>' +
       '<div class="actions" style="margin-top: 20px;"><button type="button" class="btn-primary" id="nextBtn" disabled>Επόμενο</button></div>';
-    bindLikert(document.getElementById('likertRow'), 7, answers.q2, v => {
-      answers.q2 = v;
-      replacePostSurveyEntry('q2', Number(v), null);
-      document.getElementById('nextBtn').disabled = false;
+    
+    bindLikert(document.getElementById('likertRow'), 7, answers[sid], v => {
+      answers[sid] = v;
+      replacePostSurveyEntry(sid, Number(v), null);
+      const btn = document.getElementById('nextBtn');
+      if (btn.disabled) {
+        btn.disabled = false;
+        btn.classList.add('pop');
+      }
       renderCurrent();
     });
-    document.getElementById('nextBtn').onclick = () => advanceTo(nextStepId('q2', answers));
-    if (answers.q2) document.getElementById('nextBtn').disabled = false;
-    attachNav(canBack);
-    return;
-  }
-
-  if (sid === 'q3') {
-    card.innerHTML =
-      '<div class="q-label">Κλίμακα 1–7</div>' +
-      '<div class="q-text">Ερώτηση 3\n\nΠόσο ικανός σου φάνηκε ο FinBot στον τομέα των οικονομικών;</div>' +
-      '<div class="q-scale-hint">1 = Καθόλου ικανός\n7 = Απόλυτα ικανός</div>' +
-      '<div class="likert-row" id="likertRow"></div>' +
-      '<div class="actions" style="margin-top: 20px;"><button type="button" class="btn-primary" id="nextBtn" disabled>Επόμενο</button></div>';
-    bindLikert(document.getElementById('likertRow'), 7, answers.q3, v => {
-      answers.q3 = v;
-      replacePostSurveyEntry('q3', Number(v), null);
-      document.getElementById('nextBtn').disabled = false;
-      renderCurrent();
-    });
-    document.getElementById('nextBtn').onclick = () => advanceTo(nextStepId('q3', answers));
-    if (answers.q3) document.getElementById('nextBtn').disabled = false;
-    attachNav(canBack);
-    return;
-  }
-
-  if (sid === 'q4') {
-    card.innerHTML =
-      '<div class="q-label">Κλίμακα 1–7</div>' +
-      '<div class="q-text">Ερώτηση 4\n\nΠόσο εμπιστεύτηκες τις συμβουλές του FinBot κατά τη διάρκεια της συνομιλίας;</div>' +
-      '<div class="q-scale-hint">1 = Καθόλου\n7 = Απόλυτα</div>' +
-      '<div class="likert-row" id="likertRow"></div>' +
-      '<div class="actions" style="margin-top: 20px;"><button type="button" class="btn-primary" id="nextBtn" disabled>Επόμενο</button></div>';
-    bindLikert(document.getElementById('likertRow'), 7, answers.q4, v => {
-      answers.q4 = v;
-      replacePostSurveyEntry('q4', Number(v), null);
-      document.getElementById('nextBtn').disabled = false;
-      renderCurrent();
-    });
-    document.getElementById('nextBtn').onclick = () => advanceTo(nextStepId('q4', answers));
-    if (answers.q4) document.getElementById('nextBtn').disabled = false;
-    attachNav(canBack);
-    return;
-  }
-
-  if (sid === 'q5') {
-    card.innerHTML =
-      '<div class="q-label">Κλίμακα 1–7</div>' +
-      '<div class="q-text">Ερώτηση 5\n\nΠόσο καλή δουλειά έκανε ο FinBot στο να σε βοηθήσει;</div>' +
-      '<div class="q-scale-hint">1 = Πολύ κακή\n7 = Εξαιρετική</div>' +
-      '<div class="likert-row" id="likertRow"></div>' +
-      '<div class="actions" style="margin-top: 20px;"><button type="button" class="btn-primary" id="nextBtn" disabled>Επόμενο</button></div>';
-    bindLikert(document.getElementById('likertRow'), 7, answers.q5, v => {
-      answers.q5 = v;
-      replacePostSurveyEntry('q5', Number(v), null);
-      document.getElementById('nextBtn').disabled = false;
-      renderCurrent();
-    });
-    document.getElementById('nextBtn').onclick = () => advanceTo(nextStepId('q5', answers));
-    if (answers.q5) document.getElementById('nextBtn').disabled = false;
-    attachNav(canBack);
-    return;
-  }
-
-  if (sid === 'q6') {
-    card.innerHTML =
-      '<div class="q-label">Κλίμακα 1–7</div>' +
-      '<div class="q-text">Ερώτηση 6\n\nΘα χρησιμοποιούσες ξανά τον FinBot για οικονομικές συμβουλές;</div>' +
-      '<div class="q-scale-hint">1 = Σίγουρα όχι\n7 = Σίγουρα ναι</div>' +
-      '<div class="likert-row" id="likertRow"></div>' +
-      '<div class="actions" style="margin-top: 20px;"><button type="button" class="btn-primary" id="nextBtn" disabled>Επόμενο</button></div>';
-    bindLikert(document.getElementById('likertRow'), 7, answers.q6, v => {
-      answers.q6 = v;
-      replacePostSurveyEntry('q6', Number(v), null);
-      document.getElementById('nextBtn').disabled = false;
-      renderCurrent();
-    });
-    document.getElementById('nextBtn').onclick = () => advanceTo(nextStepId('q6', answers));
-    if (answers.q6) document.getElementById('nextBtn').disabled = false;
+    
+    document.getElementById('nextBtn').onclick = () => advanceTo(nextStepId(sid, answers));
+    if (answers[sid]) {
+      const btn = document.getElementById('nextBtn');
+      btn.disabled = false;
+      btn.classList.add('pop');
+    }
     attachNav(canBack);
     return;
   }
@@ -839,12 +785,20 @@ function renderCurrent() {
           delete answers.q8;
           replacePostSurveyEntry('q8', null, { skipped: true, reason: 'q7_not_yes' });
         }
-        document.getElementById('nextBtn').disabled = false;
+        const btn = document.getElementById('nextBtn');
+        if (btn.disabled) {
+           btn.disabled = false;
+           btn.classList.add('pop');
+        }
         renderCurrent();
       }
     );
     document.getElementById('nextBtn').onclick = () => advanceTo(nextStepId('q7', answers));
-    if (answers.q7) document.getElementById('nextBtn').disabled = false;
+    if (answers.q7) {
+      const btn = document.getElementById('nextBtn');
+      btn.disabled = false;
+      btn.classList.add('pop');
+    }
     attachNav(canBack);
     return;
   }
@@ -871,44 +825,6 @@ function renderCurrent() {
     return;
   }
 
-  if (sid === 'q9') {
-    card.innerHTML =
-      '<div class="q-label">Κλίμακα 1–7</div>' +
-      '<div class="q-text">ΜΕΡΟΣ Γ — Automation bias\n\nΕρώτηση 9\n\nΘα εφάρμοζες τις συμβουλές του FinBot στην πραγματική σου ζωή;</div>' +
-      '<div class="q-scale-hint">1 = Σίγουρα όχι\n7 = Σίγουρα ναι</div>' +
-      '<div class="likert-row" id="likertRow"></div>' +
-      '<div class="actions" style="margin-top: 20px;"><button type="button" class="btn-primary" id="nextBtn" disabled>Επόμενο</button></div>';
-    bindLikert(document.getElementById('likertRow'), 7, answers.q9, v => {
-      answers.q9 = v;
-      replacePostSurveyEntry('q9', Number(v), null);
-      document.getElementById('nextBtn').disabled = false;
-      renderCurrent();
-    });
-    document.getElementById('nextBtn').onclick = () => advanceTo(nextStepId('q9', answers));
-    if (answers.q9) document.getElementById('nextBtn').disabled = false;
-    attachNav(canBack);
-    return;
-  }
-
-  if (sid === 'q10') {
-    card.innerHTML =
-      '<div class="q-label">Κλίμακα 1–7</div>' +
-      '<div class="q-text">Ερώτηση 10\n\nΠόσο σίγουρος/η είσαι ότι το οικονομικό πλάνο που φτιάξαμε είναι σωστό;</div>' +
-      '<div class="q-scale-hint">1 = Καθόλου σίγουρος/η\n7 = Απόλυτα σίγουρος/η</div>' +
-      '<div class="likert-row" id="likertRow"></div>' +
-      '<div class="actions" style="margin-top: 20px;"><button type="button" class="btn-primary" id="nextBtn" disabled>Επόμενο</button></div>';
-    bindLikert(document.getElementById('likertRow'), 7, answers.q10, v => {
-      answers.q10 = v;
-      replacePostSurveyEntry('q10', Number(v), null);
-      document.getElementById('nextBtn').disabled = false;
-      renderCurrent();
-    });
-    document.getElementById('nextBtn').onclick = () => advanceTo(nextStepId('q10', answers));
-    if (answers.q10) document.getElementById('nextBtn').disabled = false;
-    attachNav(canBack);
-    return;
-  }
-
   if (sid === 'scenario') {
     card.innerHTML =
       '<div class="q-label">Επιλογή</div>' +
@@ -927,7 +843,11 @@ function renderCurrent() {
       val => {
         answers.scenario_basis = val;
         replacePostSurveyEntry('scenario_basis', val, null);
-        document.getElementById('nextBtn').disabled = false;
+        const btn = document.getElementById('nextBtn');
+        if (btn.disabled) {
+           btn.disabled = false;
+           btn.classList.add('pop');
+        }
         renderCurrent();
       }
     );
@@ -936,7 +856,11 @@ function renderCurrent() {
         currentStepId = 'done';
         renderCurrent();
     };
-    if (answers.scenario_basis) document.getElementById('nextBtn').disabled = false;
+    if (answers.scenario_basis) {
+      const btn = document.getElementById('nextBtn');
+      btn.disabled = false;
+      btn.classList.add('pop');
+    }
     attachNav(canBack);
   }
 }
