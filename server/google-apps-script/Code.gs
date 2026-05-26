@@ -23,15 +23,15 @@ function doPost(e) {
     // Headers setup if empty
     if (sheet.getLastRow() === 0) {
       sheet.appendRow([
-        'Timestamp',
-        'SessionID', 
-        'Condition',
-        'ErrorTiming',
-        'ShowConf',
-        'Category',
-        'Field',
-        'Value',
-        'Detail'
+        'Ημερομηνία/Ώρα',
+        'ID Συνεδρίας', 
+        'Πειραματική Συνθήκη (1-6)',
+        'Timing Σφάλματος',
+        'Εμφάνιση Confidence',
+        'Κατηγορία Ερώτησης',
+        'Πεδίο/Ερώτηση',
+        'Απάντηση/Τιμή',
+        'Λεπτομέρειες/Metrics'
       ]);
     }
 
