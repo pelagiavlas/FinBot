@@ -446,8 +446,42 @@ let responseSessionId = null;
 const STEP_IDS = ['intro', 'demographics', 'q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10', 'scenario'];
 
 const answers = {};
+const surveyMetrics = {}; // Track behavior per step
 
 let currentStepId = 'intro';
+
+function initMetrics(sid) {
+  if (!surveyMetrics[sid]) {
+    surveyMetrics[sid] = {
+      start: Date.now(),
+      firstAction: null,
+      edits: 0
+    };
+  }
+}
+
+function recordSurveyAction(sid) {
+  if (surveyMetrics[sid] && !surveyMetrics[sid].firstAction) {
+    surveyMetrics[sid].firstAction = Date.now();
+  }
+}
+
+function recordSurveyEdit(sid) {
+  if (surveyMetrics[sid]) {
+    surveyMetrics[sid].edits++;
+  }
+}
+
+function getSurveyStats(sid) {
+  const m = surveyMetrics[sid];
+  if (!m) return null;
+  const end = Date.now();
+  return {
+    hesitation_ms: m.firstAction ? m.firstAction - m.start : end - m.start,
+    total_time_ms: end - m.start,
+    edits: m.edits
+  };
+}
 
 function shouldSkip(stepId, ans) {
   if (stepId === 'q8') return ans.q7 !== 'yes';
@@ -654,6 +688,7 @@ function renderDoneScreen() {
 function renderCurrent() {
   const sid = currentStepId;
   updateProgressFromStep(sid === 'done' ? 'done' : sid, answers);
+  initMetrics(sid); // Track time for this step
 
   if (sid === 'intro') {
     renderIntroScreen();
@@ -701,7 +736,14 @@ function renderCurrent() {
       {label: 'Άνδρας', value: 'male'},
       {label: 'Γυναίκα', value: 'female'},
       {label: 'Άλλο / Προτιμώ να μην απαντήσω', value: 'other'}
-    ], answers.gender, v => { answers.gender = v; replacePostSurveyEntry('gender', v); checkReady(); renderCurrent(); });
+    ], answers.gender, v => { 
+      recordSurveyAction(sid);
+      if (answers.gender && answers.gender !== v) recordSurveyEdit(sid);
+      answers.gender = v; 
+      replacePostSurveyEntry('gender', v, { metrics: getSurveyStats(sid) }); 
+      checkReady(); 
+      renderCurrent(); 
+    });
 
     bindChoices(document.getElementById('ageStack'), [
       {label: '18-24', value: '18-24'},
@@ -709,13 +751,27 @@ function renderCurrent() {
       {label: '35-44', value: '35-44'},
       {label: '45-54', value: '45-54'},
       {label: '55+', value: '55+'}
-    ], answers.age, v => { answers.age = v; replacePostSurveyEntry('age', v); checkReady(); renderCurrent(); });
+    ], answers.age, v => { 
+      recordSurveyAction(sid);
+      if (answers.age && answers.age !== v) recordSurveyEdit(sid);
+      answers.age = v; 
+      replacePostSurveyEntry('age', v, { metrics: getSurveyStats(sid) }); 
+      checkReady(); 
+      renderCurrent(); 
+    });
 
     bindChoices(document.getElementById('eduStack'), [
       {label: 'Δευτεροβάθμια (Λύκειο)', value: 'high_school'},
       {label: 'Προπτυχιακό (ΑΕΙ/ΤΕΙ)', value: 'bachelor'},
       {label: 'Μεταπτυχιακό / Διδακτορικό', value: 'postgrad'}
-    ], answers.edu, v => { answers.edu = v; replacePostSurveyEntry('education', v); checkReady(); renderCurrent(); });
+    ], answers.edu, v => { 
+      recordSurveyAction(sid);
+      if (answers.edu && answers.edu !== v) recordSurveyEdit(sid);
+      answers.edu = v; 
+      replacePostSurveyEntry('education', v, { metrics: getSurveyStats(sid) }); 
+      checkReady(); 
+      renderCurrent(); 
+    });
 
     document.getElementById('demoNext').onclick = () => advanceTo('q1');
     checkReady();
@@ -744,8 +800,10 @@ function renderCurrent() {
       '<div class="actions" style="margin-top: 20px;"><button type="button" class="btn-primary" id="nextBtn" disabled>Επόμενο</button></div>';
     
     bindLikert(document.getElementById('likertRow'), 7, answers[sid], v => {
+      recordSurveyAction(sid);
+      if (answers[sid] && answers[sid] !== v) recordSurveyEdit(sid);
       answers[sid] = v;
-      replacePostSurveyEntry(sid, Number(v), null);
+      replacePostSurveyEntry(sid, Number(v), { metrics: getSurveyStats(sid) });
       const btn = document.getElementById('nextBtn');
       if (btn.disabled) {
         btn.disabled = false;
@@ -779,8 +837,10 @@ function renderCurrent() {
       ],
       answers.q7,
       val => {
+        recordSurveyAction(sid);
+        if (answers.q7 && answers.q7 !== val) recordSurveyEdit(sid);
         answers.q7 = val;
-        replacePostSurveyEntry('q7', val, null);
+        replacePostSurveyEntry('q7', val, { metrics: getSurveyStats(sid) });
         if (val !== 'yes') {
           delete answers.q8;
           replacePostSurveyEntry('q8', null, { skipped: true, reason: 'q7_not_yes' });
@@ -810,12 +870,16 @@ function renderCurrent() {
       '<textarea id="openText" placeholder="Γράψε εδώ..."></textarea>' +
       '<div class="actions"><button type="button" class="btn-primary" id="submitText">Επόμενο</button></div>';
     const ta = document.getElementById('openText');
+    ta.oninput = () => recordSurveyAction(sid);
+    ta.onkeydown = (e) => {
+      if (e.key === 'Backspace' || e.key === 'Delete') recordSurveyEdit(sid);
+    };
     ta.value = answers.q8 != null ? String(answers.q8) : '';
     document.getElementById('submitText').onclick = () => {
       const raw = (ta.value || '').trim();
       if (!raw) return;
       answers.q8 = raw;
-      replacePostSurveyEntry('q8', raw, { chars: raw.length });
+      replacePostSurveyEntry('q8', raw, { chars: raw.length, metrics: getSurveyStats(sid) });
       advanceTo(nextStepId('q8', answers));
     };
     ta.addEventListener('keydown', e => {
@@ -841,8 +905,10 @@ function renderCurrent() {
       ],
       answers.scenario_basis,
       val => {
+        recordSurveyAction(sid);
+        if (answers.scenario_basis && answers.scenario_basis !== val) recordSurveyEdit(sid);
         answers.scenario_basis = val;
-        replacePostSurveyEntry('scenario_basis', val, null);
+        replacePostSurveyEntry('scenario_basis', val, { metrics: getSurveyStats(sid) });
         const btn = document.getElementById('nextBtn');
         if (btn.disabled) {
            btn.disabled = false;
@@ -852,7 +918,7 @@ function renderCurrent() {
       }
     );
     document.getElementById('nextBtn').onclick = () => {
-        replacePostSurveyEntry('survey_completed', true, null);
+        replacePostSurveyEntry('survey_completed', true, { metrics: getSurveyStats(sid) });
         currentStepId = 'done';
         renderCurrent();
     };

@@ -487,6 +487,9 @@ function saveResponseLog(entries) {
 
 function appendResponseEntry({ category, field, value, detail }) {
   if (!responseSessionId) return;
+  
+  const interaction_metrics = metrics.getStats();
+  
   const entry = {
     sessionId: responseSessionId,
     ts: new Date().toISOString(),
@@ -496,7 +499,10 @@ function appendResponseEntry({ category, field, value, detail }) {
     category,
     field,
     value: value === undefined ? null : value,
-    detail: detail || null,
+    detail: { 
+      ...(detail || {}),
+      interaction_metrics 
+    },
   };
   const log = loadResponseLog();
   log.push(entry);
@@ -557,6 +563,7 @@ async function botSay(text, delay = 800) {
 }
 
 function showButtons(options) {
+  metrics.recordFirstAction(); // Button row counts as action potential
   const row = document.createElement('div');
   row.className = 'buttons-row';
   row.id = 'btnRow';
@@ -565,6 +572,7 @@ function showButtons(options) {
     btn.className = 'choice-btn';
     btn.textContent = opt.label;
     btn.onclick = () => {
+      metrics.recordFirstAction();
       row.remove();
       addBubble(opt.label, 'user');
       if (inputResolver) {
@@ -638,6 +646,37 @@ function assignExperimentalCondition() {
 }
 
 // ============================================================
+// METRICS TRACKER
+// ============================================================
+const metrics = {
+  stepStartTime: 0,
+  firstActionTime: 0,
+  editCount: 0,
+  reset(startTime = Date.now()) {
+    this.stepStartTime = startTime;
+    this.firstActionTime = 0;
+    this.editCount = 0;
+  },
+  recordFirstAction() {
+    if (this.firstActionTime === 0) {
+      this.firstActionTime = Date.now();
+    }
+  },
+  getStats() {
+    const end = Date.now();
+    return {
+      hesitation_ms: this.firstActionTime > 0 ? this.firstActionTime - this.stepStartTime : end - this.stepStartTime,
+      total_time_ms: end - this.stepStartTime,
+      edits: this.editCount
+    };
+  }
+};
+
+inputEl.addEventListener('input', () => {
+  metrics.recordFirstAction();
+});
+
+// ============================================================
 // INPUT HANDLING
 // ============================================================
 function waitForInput() {
@@ -645,6 +684,7 @@ function waitForInput() {
   inputEl.disabled = false;
   sendBtn.disabled = false;
   inputEl.focus();
+  metrics.reset(); // Reset for new step
   return new Promise(resolve => { inputResolver = resolve; });
 }
 
@@ -662,6 +702,9 @@ async function handleSend() {
 }
 
 inputEl.addEventListener('keydown', e => {
+  if (e.key === 'Backspace' || e.key === 'Delete') {
+    metrics.editCount++;
+  }
   if (e.key === 'Enter') handleSend();
 });
 
@@ -689,7 +732,7 @@ async function runFlow() {
   sendBtn.disabled = true;
 
   // ---- INTRO ----
-  await botSay('Γεια σου! Είμαι ο FinBot 💼\n\nΘα σε βοηθήσω να δημιουργήσεις ένα απλό οικονομικό πλάνο, βήμα-βήμα.\n\nΣτόχος είναι να οργανώσουμε βασικές πληροφορίες και να δούμε πώς διαμορφώνονται τα οικονομικά σου.\n\nΓια να ξεκινήσουμε, χρειάζομαι μερικές βασικές πληροφορίες.\n\nΑν δεν έχεις πρόχειρα ακριβή στοιχεία, μπορείς να χρησιμοποιήσεις μια εκτίμηση.', 1500);
+  await botSay('Γεια σου! Είμαι ο FinBot 💼\n\nΘα σε βοηθήσω να δημιουργήσεις ένα απλό οικονομικό πλάνο, βήμα-βήμα.\n\nΣτόχος είναι να οργανώσουμε βασικές πληροφορίες και να δούμε πώς διαμορφώνονται τα οικονομικά σου.\n\n**Σημαντικό:** Δεν χρειάζεται να χρησιμοποιήσεις πραγματικά σου δεδομένα αν δεν το επιθυμείς. Μπορείς να βάλεις ενδεικτικά ή υποθετικά νούμερα για να δεις πώς λειτουργεί το εργαλείο.', 2000);
 
   await sleep(400);
   showButtons([{ label: 'Πάμε 🚀', value: 'start' }]);
@@ -746,7 +789,7 @@ async function runFlow() {
     await botSay('Mπράβο που δεν έχεις ενοίκιο!! Αυτό είναι τεράστιο πλεονέκτημα για την αποταμίευσή σου. 🚀', 800);
   }
 
-  await botSay('Ωραία, ας δούμε και τα υπόλοιπα μηνιαία σου έξοδα 🙂\n\nΓια παράδειγμα:\n• Συνδρομές (Netflix, Spotify κλπ.)\n• Λογαριασμοί κινητού\n• Μετακίνηση για δουλειά\n\nΠερίπου πόσο είναι συνολικά αυτά τον μήνα; (σε €)', 1000);
+  await botSay('Ωραία, ας δούμε και τα υπόλοιπα μηνιαία σου έξοδα 🙂\n\nΓια παράδειγμα:\n• Συνδρομές (Netflix, Spotify κλπ.)\n• Λογαριασμοί (ρεύμα, κινητό κλπ.)\n• Μετακίνηση για δουλειά\n\nΠερίπου πόσο είναι συνολικά αυτά τον μήνα; (σε €)', 1000);
 
   state.ejoda = await getNumberLogged('variable_expenses', 'other_monthly_eur');
   state.total_expenses = state.rent + state.ejoda;
