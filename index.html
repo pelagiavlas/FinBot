@@ -535,7 +535,9 @@ function scrollBottom() {
 function addBubble(text, who) {
   const div = document.createElement('div');
   div.className = `bubble ${who}`;
-  div.textContent = text;
+  // Μετατροπή των **text** σε <strong>text</strong> για σωστό bold
+  const formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  div.innerHTML = formattedText;
   messagesEl.appendChild(div);
   scrollBottom();
   return div;
