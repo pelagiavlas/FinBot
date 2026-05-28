@@ -749,18 +749,23 @@ async function runFlow() {
     if (state.income > 0) {
       incomeOk = true;
     } else {
-      await botSay('Παρακαλώ γράψε έναν αριθμό σε ευρώ, π.χ. 900', 500);
+      await botSay('Παρακαλώ γράψε έναν αριθμό σε ευρώ, π.χ. **900**', 500);
     }
   }
 
   {
     const correct40 = Math.round(state.income * 0.40);
-    state.limit = state.error_timing === 'early' ? correct40 + 120 : correct40;
+    if (state.error_timing === 'early') {
+      // Σημαντικό λάθος: Το bot λέει ότι το 40% είναι το 75% του μισθού
+      state.limit = Math.round(state.income * 0.75);
+    } else {
+      state.limit = correct40;
+    }
   }
   updateProgress(2, TOTAL_STEPS);
 
   // ---- STEP 2: RENT ----
-  await botSay(`Με βάση το εισόδημά σου, τα σταθερά έξοδα συνήθως υπολογίζεται ότι δεν ξεπερνούν περίπου το 40% του μηνιαίου ποσού.\r\n\r\nΑυτό σημαίνει έως ${state.limit} € τον μήνα.\r\n\r\nΠληρώνεις ενοίκιο; ` + confidenceSuffix(95), 1200);
+  await botSay(`Με βάση το εισόδημά σου, τα σταθερά έξοδα συνήθως υπολογίζεται ότι δεν ξεπερνούν περίπου το 40% του μηνιαίου ποσού.\r\n\r\nΑυτό σημαίνει έως **${state.limit} €** τον μήνα.\r\n\r\nΠληρώνεις ενοίκιο; ` + confidenceSuffix(95), 1200);
 
   showButtons([
     { label: 'Ναι', value: 'yes' },
@@ -776,7 +781,7 @@ async function runFlow() {
     // --- VALUE ADD: BENCHMARKING ---
     const ratio = (state.rent / state.income) * 100;
     if (ratio <= 35) {
-      await botSay('Πολύ καλά! Το ενοίκιό σου είναι σε ιδανικό επίπεδο σε σχέση με το εισόδημά σου (κάτω από 35%).', 800);
+      await botSay('Πολύ καλά! Το ενοίκιό σου είναι σε ιδανικό επίπεδο σε σχέση με το εισόδημά σου (κάτω από **35%**).', 800);
     } else if (ratio <= 45) {
       await botSay('Το ενοίκιό σου είναι σε λογικά πλαίσια, αν και οριακά κοντά στον μέσο όρο.', 800);
     } else {
@@ -798,7 +803,7 @@ async function runFlow() {
   updateProgress(3, TOTAL_STEPS);
 
   // ---- STEP 3: GOAL ----
-  await botSay(`Ωραία — άρα τα συνολικά μηνιαία σου έξοδα είναι περίπου ${state.total_expenses} €.\n\nΑυτό σημαίνει ότι σου μένουν περίπου ${state.disposable} € κάθε μήνα.\n\nΠάμε στο επόμενο βήμα 🙂\nΈχεις κάποιον οικονομικό στόχο για τους επόμενους 12 μήνες;\nΠόσα θα ήθελες να έχεις αποταμιεύσει; (σε €)` + confidenceSuffix(94), 1200);
+  await botSay(`Ωραία — άρα τα συνολικά μηνιαία σου έξοδα είναι περίπου **${state.total_expenses} €**.\n\nΑυτό σημαίνει ότι σου μένουν περίπου **${state.disposable} €** κάθε μήνα.\n\nΠάμε στο επόμενο βήμα 🙂\nΈχεις κάποιον οικονομικό στόχο για τους επόμενους **12** μήνες;\nΠόσα θα ήθελες να έχεις αποταμιεύσει; (σε €)` + confidenceSuffix(94), 1200);
 
   state.savings_goal = await getNumberLogged('goals', 'savings_target_12m_eur');
   updateProgress(4, TOTAL_STEPS);
@@ -807,7 +812,7 @@ async function runFlow() {
   state.emergency_high = Math.round(state.income * 3);
 
   // ---- STEP 4: EMERGENCY FUND ----
-  await botSay(`Πριν συνεχίσουμε, υπάρχει κάτι που πολλοί νέοι συχνά παραλείπουν: το έκτακτο ταμείο 🙂\n\nΣυνήθως προτείνεται να καλύπτει 2–3 μηνιαία εισοδήματα — για σένα αυτό αντιστοιχεί περίπου σε ${state.emergency_low}€ έως ${state.emergency_high}€.\n\nΈχεις ήδη κάποιες αποταμιεύσεις;` + confidenceSuffix(95), 1200);
+  await botSay(`Πριν συνεχίσουμε, υπάρχει κάτι που πολλοί νέοι συχνά παραλείπουν: το έκτακτο ταμείο 🙂\n\nΣυνήθως προτείνεται να καλύπτει **2–3** μηνιαία εισοδήματα — για σένα αυτό αντιστοιχεί περίπου σε **${state.emergency_low}€** έως **${state.emergency_high}€**.\n\nΈχεις ήδη κάποιες αποταμιεύσεις;` + confidenceSuffix(95), 1200);
 
   showButtons([
     { label: 'Ναι, έχω 🙂', value: 'yes' },
@@ -856,7 +861,8 @@ async function runFlow() {
   {
     const actualMonths = Math.ceil(state.savings_goal / state.monthly_savings);
     if (state.error_timing === 'late') {
-      state.correct_months = Math.max(1, Math.floor(actualMonths / 2));
+      // Σημαντικό λάθος: Το bot υποτιμά τον χρόνο (π.χ. λέει 4 μήνες αντί για 12)
+      state.correct_months = Math.max(1, Math.floor(actualMonths / 3));
     } else {
       state.correct_months = actualMonths;
     }
@@ -864,7 +870,7 @@ async function runFlow() {
   updateProgress(6, TOTAL_STEPS);
 
   // ---- STEP 6: RESULT ----
-  await botSay(`Ωραία 🙂\nΜε ${state.monthly_savings}€ τον μήνα, για να φτάσεις τα ${state.savings_goal}€ θα χρειαστούν περίπου ${state.correct_months} μήνες.\n\nΕίναι ένα αρκετά λογικό χρονικό διάστημα, αν κρατήσεις έναν σταθερό ρυθμό.`, 1200);
+  await botSay(`Ωραία 🙂\nΜε ${state.monthly_savings}€ τον μήνα, για να φτάσεις τα ${state.savings_goal}€ θα χρειαστούν περίπου **${state.correct_months} μήνες**.`, 1200);
 
   // --- VALUE ADD: WHAT-IF SCENARIO ---
   const extraAmount = 25;

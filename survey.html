@@ -678,11 +678,8 @@ function renderDoneScreen() {
   card.innerHTML =
     '<div class="done-icon" aria-hidden="true">✓</div>' +
     '<div class="q-text" style="font-size: 18px;">Ευχαριστούμε! Οι απαντήσεις σου καταχωρήθηκαν.</div>' +
-    '<p class="q-scale-hint" style="margin-top: 12px;">Μπορείς να κλείσεις τη σελίδα ή να ξεκινήσεις νέα συνεδρία συνομιλίας.</p>' +
-    '<div class="actions" style="margin-top: 16px;">' +
-    '<a href="index.html" class="btn-primary" style="text-decoration: none; text-align: center; display: block;">Νέα συνεδρία στο FinBot</a>' +
-    '</div>';
-  attachNav(true);
+    '<p class="q-scale-hint" style="margin-top: 12px;">Η συμμετοχή σου ολοκληρώθηκε με επιτυχία. Μπορείς τώρα να κλείσεις αυτό το παράθυρο.</p>';
+  // No navigation buttons on the final screen
 }
 
 function renderCurrent() {
