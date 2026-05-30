@@ -416,6 +416,7 @@ const state = {
   rent: 0,
   hasRent: null,
   ejoda: 0,
+  entertainment: 0,
   total_expenses: 0,
   disposable: 0,
   savings_goal: 0,
@@ -713,15 +714,49 @@ inputEl.addEventListener('keydown', e => {
 // ============================================================
 // FLOW
 // ============================================================
+function parseNumericInput(raw) {
+  if (!raw) return NaN;
+  let s = raw.trim();
+  
+  // If there are both dots and commas (e.g., 1.234,56)
+  if (s.includes('.') && s.includes(',')) {
+    // Standard Greek/European format: dot for thousands, comma for decimal
+    return parseFloat(s.replace(/\./g, '').replace(',', '.'));
+  }
+  
+  // If there's only a comma (e.g., 3,5 or 1000,50)
+  if (s.includes(',')) {
+    return parseFloat(s.replace(',', '.'));
+  }
+  
+  // If there's only one or more dots
+  if (s.includes('.')) {
+    const parts = s.split('.');
+    // If multiple dots (e.g., 1.000.000), they are thousands separators
+    if (parts.length > 2) {
+      return parseFloat(s.replace(/\./g, ''));
+    }
+    // Single dot (e.g., 3.000 vs 3.5)
+    // If it's followed by exactly 3 digits, assume thousands separator
+    if (parts[1].length === 3) {
+      return parseFloat(s.replace('.', ''));
+    }
+    // Otherwise treat as decimal (e.g., 3.5, 10.50)
+    return parseFloat(s);
+  }
+  
+  return parseFloat(s);
+}
+
 async function getNumber(fallback = 0) {
   const raw = await waitForInput();
-  const n = parseFloat(raw.replace(',', '.'));
+  const n = parseNumericInput(raw);
   return isNaN(n) ? fallback : n;
 }
 
 async function getNumberLogged(category, field, fallback = 0) {
   const raw = await waitForInput();
-  const n = parseFloat(raw.replace(',', '.'));
+  const n = parseNumericInput(raw);
   const val = isNaN(n) ? fallback : n;
   appendResponseEntry({ category, field, value: val, detail: { raw_input: raw } });
   return val;
@@ -796,7 +831,7 @@ async function runFlow() {
     await botSay('Mπράβο που δεν έχεις ενοίκιο!! Αυτό είναι τεράστιο πλεονέκτημα για την αποταμίευσή σου. 🚀', 800);
   }
 
-  await botSay('Ωραία, ας δούμε και τα υπόλοιπα μηνιαία σου έξοδα 🙂\n\nΓια παράδειγμα:\n• Συνδρομές (Netflix, Spotify κλπ.)\n• Λογαριασμοί (ρεύμα, κινητό κλπ.)\n• Μετακίνηση για δουλειά\n\nΠερίπου πόσο είναι συνολικά αυτά τον μήνα; (σε €)', 1000);
+  await botSay('Ωραία, ας δούμε και τα υπόλοιπα μηνιαία σου έξοδα 🙂\n\nΓια παράδειγμα:\n• Συνδρομές (Netflix, Spotify κλπ.)\n• Λογαριασμοί (ρεύμα, κινητό κλπ.)\n• Μετακίνηση για δουλειά\n• Διασκέδαση & βόλτες\n\nΠερίπου πόσο είναι συνολικά αυτά τον μήνα; (σε €)', 1000);
 
   state.ejoda = await getNumberLogged('variable_expenses', 'other_monthly_eur');
   state.total_expenses = state.rent + state.ejoda;
