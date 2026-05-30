@@ -993,9 +993,20 @@ async function runFlow() {
   });
 
   // ---- FINAL SUMMARY ----
-  await botSay(`Ας δούμε μια σύνοψη του πλάνου σου:\n\n💰 Μηνιαίο εισόδημα: ${state.income}€\n🏠 Συνολικά έξοδα: ${state.total_expenses}€\n💵 Διαθέσιμα χρήματα: ${state.disposable}€\n🎯 Μηνιαία αποταμίευση: ${state.monthly_savings}€\n\nΠώς σου φαίνεται αυτό το πλάνο?`, 1500);
+  await botSay(`Ας δούμε μια σύνοψη του πλάνου σου:\n\n💰 Μηνιαίο εισόδημα: ${state.income}€\n🏠 Συνολικά έξοδα: ${state.total_expenses}€\n💵 Διαθέσιμα χρήματα: ${state.disposable}€\n🎯 Μηνιαία αποταμίευση: ${state.monthly_savings}€\n\nΠώς σου φαίνεται αυτό το πλάνο?\n(1 = καθόλου ικανοποιητικό, 10 = εξαιρετικό)`, 1500);
 
-  await waitForInput(); // Wait for user to react to summary
+  const ratingOptions = [];
+  for (let i = 1; i <= 10; i++) {
+    ratingOptions.push({ label: String(i), value: i });
+  }
+  showButtons(ratingOptions);
+
+  const planRating = await new Promise(res => { inputResolver = res; });
+  appendResponseEntry({
+    category: 'session',
+    field: 'plan_rating_1_10',
+    value: planRating,
+  });
 
   await botSay('Το πλάνο σου είναι έτοιμο 🙂\n\nΕυχαριστούμε για τη συμμετοχή σου!\nΘα ακολουθήσουν μερικές σύντομες ερωτήσεις για την εμπειρία σου.', 1200);
 
