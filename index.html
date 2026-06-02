@@ -522,6 +522,7 @@ function pushEntryToServer(entry) {
 }
 
 function loadResponseLog() {
+// ... (rest of loadResponseLog)
   try {
     const raw = localStorage.getItem(RESPONSE_LOG_KEY);
     if (!raw) return [];
@@ -677,34 +678,55 @@ function confidenceSuffix(percent) {
 }
 
 function assignExperimentalCondition() {
-  const STORAGE_KEY = 'finbot_last_condition';
-  let last = 0;
-  try {
-    const s = sessionStorage.getItem(STORAGE_KEY);
-    if (s != null && s !== '') last = parseInt(s, 10) || 0;
-  } catch (_) {}
+  // Οι τρέχουσες μετρήσεις σου (στα 88 άτομα)
+  const stats = {
+    1: 20, // Condition 1
+    2: 14, // Condition 2
+    3: 11, // Condition 3
+    4: 14, // Condition 4
+    5: 10, // Condition 5
+    6: 19  // Condition 6
+  };
+  
+  const target = 20; // Ο στόχος σου για κάθε condition
+  let pool = [];
 
-  let random = Math.floor(Math.random() * 6) + 1;
-  let guard = 0;
-  while (random === last && last >= 1 && last <= 6 && guard++ < 40) {
-    random = Math.floor(Math.random() * 6) + 1;
+  // Δημιουργούμε μια "δεξαμενή" επιλογών. 
+  // Για κάθε condition, βάζουμε στη δεξαμενή τόσες θέσεις όσες λείπουν για το 20.
+  for (let c = 1; c <= 6; c++) {
+    let missing = target - stats[c];
+    if (missing > 0) {
+      for (let i = 0; i < missing; i++) {
+        pool.push(c);
+      }
+    }
   }
-  try {
-    sessionStorage.setItem(STORAGE_KEY, String(random));
-  } catch (_) {}
 
-  state.condition = random;
-  if (random === 1) { state.error_timing = 'early'; state.show_conf = true; }
-  if (random === 2) { state.error_timing = 'early'; state.show_conf = false; }
-  if (random === 3) { state.error_timing = 'late'; state.show_conf = true; }
-  if (random === 4) { state.error_timing = 'late'; state.show_conf = false; }
-  if (random === 5) { state.error_timing = 'none'; state.show_conf = true; }
-  if (random === 6) { state.error_timing = 'none'; state.show_conf = false; }
+  let assigned;
+  if (pool.length > 0) {
+    // Επιλέγουμε τυχαία μια από τις θέσεις που λείπουν
+    assigned = pool[Math.floor(Math.random() * pool.length)];
+  } else {
+    // Αν όλα έχουν πιάσει το 20, συνεχίζουμε εντελώς τυχαία 1-6
+    assigned = Math.floor(Math.random() * 6) + 1;
+  }
+
+  // Εφαρμογή της συνθήκης
+  state.condition = assigned;
+  if (assigned === 1) { state.error_timing = 'early'; state.show_conf = true; }
+  if (assigned === 2) { state.error_timing = 'early'; state.show_conf = false; }
+  if (assigned === 3) { state.error_timing = 'late'; state.show_conf = true; }
+  if (assigned === 4) { state.error_timing = 'late'; state.show_conf = false; }
+  if (assigned === 5) { state.error_timing = 'none'; state.show_conf = true; }
+  if (assigned === 6) { state.error_timing = 'none'; state.show_conf = false; }
+  
+  console.log("Assigned Condition (Weighted):", assigned);
 }
 
 // ============================================================
 // METRICS TRACKER
 // ============================================================
+// ... (rest of metrics tracker)
 const metrics = {
   stepStartTime: 0,
   firstActionTime: 0,
@@ -817,7 +839,7 @@ async function getNumberLogged(category, field, fallback = 0) {
 }
 
 async function runFlow() {
-  assignExperimentalCondition();
+  await assignExperimentalCondition();
   beginResponseSession();
   inputEl.disabled = true;
   sendBtn.disabled = true;

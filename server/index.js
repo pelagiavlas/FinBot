@@ -188,6 +188,77 @@ app.get('/health', (_req, res) => {
   });
 });
 
+app.get('/api/assign-condition', async (req, res) => {
+  try {
+    if (!USE_SHEETS_API) {
+      return res.json({ condition: Math.floor(Math.random() * 6) + 1 });
+    }
+
+    const sheets = getSheetsClient();
+    const safeTab = `'${SHEET_TAB.replace(/'/g, "''")}'`;
+    // Φέρνουμε μόνο τις στήλες sessionId και condition για ταχύτητα
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${safeTab}!A:B`,
+    });
+
+    const rows = response.data.values;
+    const sessionConditions = new Map();
+
+    if (rows && rows.length > 1) {
+      // Ξεκινάμε από το 1 για να προσπεράσουμε τα headers
+      for (let i = 1; i < rows.length; i++) {
+        const sessionId = rows[i][0];
+        const condition = parseInt(rows[i][1]);
+        if (sessionId && !isNaN(condition)) {
+          // Κρατάμε το condition για κάθε μοναδικό sessionId
+          sessionConditions.set(sessionId, condition);
+        }
+      }
+    }
+
+    const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+    sessionConditions.forEach((cond) => {
+      if (counts[cond] !== undefined) {
+        counts[cond]++;
+      }
+    });
+
+    const TARGET = 20;
+    const underTarget = [];
+    for (let i = 1; i <= 6; i++) {
+      if (counts[i] < TARGET) {
+        underTarget.push(i);
+      }
+    }
+
+    let assignedCondition;
+    if (underTarget.length > 0) {
+      // Επιλέγουμε αυτό με τις λιγότερες εγγραφές από αυτά που είναι κάτω από το στόχο
+      underTarget.sort((a, b) => counts[a] - counts[b]);
+      assignedCondition = underTarget[0];
+    } else {
+      // Αν όλα έχουν >= 20, επιλέγουμε αυτό με τις λιγότερες συνολικά
+      const all = [1, 2, 3, 4, 5, 6];
+      all.sort((a, b) => counts[a] - counts[b]);
+      assignedCondition = all[0];
+    }
+
+    res.json({
+      ok: true,
+      condition: assignedCondition,
+      counts
+    });
+  } catch (e) {
+    console.error('Error assigning condition:', e);
+    res.json({
+      ok: false,
+      condition: Math.floor(Math.random() * 6) + 1,
+      error: String(e.message)
+    });
+  }
+});
+
 app.post('/api/entries', async (req, res) => {
   try {
     const payload = buildPayload(req.body);
